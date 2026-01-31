@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run dev:*)",
+      "Bash(convert:*)",
+      "Bash(sqlite3:*)",
+      "Bash(ls:*)",
+      "Bash(lsof:*)",
+      "Bash(claude:*)",
+      "Bash(npx:*)",
+      "Bash(echo:*)",
+      "Bash(kill:*)",
+      "Bash(sips:*)",
+      "Bash(file:*)",
+      "Bash(magick identify:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_resize",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_evaluate",
+      "Bash(git add:*)"
+    ]
+  }
+}

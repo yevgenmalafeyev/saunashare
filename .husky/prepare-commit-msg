@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# Exit on any error
+set -e
+
+# Get the commit message file path
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
+
+# Only process commit messages that are not from merges, rebases, etc.
+if [ "$COMMIT_SOURCE" = "merge" ] || [ "$COMMIT_SOURCE" = "squash" ] || [ "$COMMIT_SOURCE" = "commit" ]; then
+    exit 0
+fi
+
+# Check if commit message file exists
+if [ ! -f "$COMMIT_MSG_FILE" ]; then
+    exit 0
+fi
+
+# Create a temporary file
+TEMP_FILE=$(mktemp)
+
+# Flag to track if any lines were removed
+LINES_REMOVED=false
+
+# Process the commit message line by line
+while IFS= read -r line || [ -n "$line" ]; do
+    # Check if line contains both "co-authored" AND "claude" (case insensitive)
+    if echo "$line" | grep -qi "co-authored" && echo "$line" | grep -qi "claude"; then
+        echo "🧹 Removing line containing 'co-authored' and 'claude': $line" >&2
+        LINES_REMOVED=true
+    # Check if line contains both "generated" AND "claude" (case insensitive)  
+    elif echo "$line" | grep -qi "generated" && echo "$line" | grep -qi "claude"; then
+        echo "🧹 Removing line containing 'generated' and 'claude': $line" >&2
+        LINES_REMOVED=true
+    else
+        # Keep the line
+        echo "$line" >> "$TEMP_FILE"
+    fi
+done < "$COMMIT_MSG_FILE"
+
+# Replace the original file with the cleaned version
+mv "$TEMP_FILE" "$COMMIT_MSG_FILE"
+
+# Inform user if lines were removed
+if [ "$LINES_REMOVED" = true ]; then
+    echo "✅ Automatically removed lines containing both 'co-authored'+'claude' or 'generated'+'claude'" >&2
+fi
+
+# Clean up any empty lines at the end (simplified to avoid hanging)
+sed -i '' -e '/^[[:space:]]*$/d' "$COMMIT_MSG_FILE" 2>/dev/null || true

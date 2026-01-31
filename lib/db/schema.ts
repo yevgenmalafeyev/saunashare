@@ -1,0 +1,58 @@
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+
+export const participants = sqliteTable('participants', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull().unique(),
+  activityScore: integer('activity_score').notNull().default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const sessions = sqliteTable('sessions', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const sessionParticipants = sqliteTable('session_participants', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => sessions.id, { onDelete: 'cascade' }),
+  participantId: integer('participant_id').notNull().references(() => participants.id, { onDelete: 'cascade' }),
+  personCount: integer('person_count').notNull().default(1),
+});
+
+export const expenseTemplates = sqliteTable('expense_templates', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull().unique(),
+  usageCount: integer('usage_count').notNull().default(0),
+  isSystem: integer('is_system', { mode: 'boolean' }).notNull().default(false),
+});
+
+export const expenses = sqliteTable('expenses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionId: integer('session_id').notNull().references(() => sessions.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  itemCount: integer('item_count').notNull().default(1),
+  totalCost: real('total_cost'),
+});
+
+export const expenseAssignments = sqliteTable('expense_assignments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  expenseId: integer('expense_id').notNull().references(() => expenses.id, { onDelete: 'cascade' }),
+  sessionParticipantId: integer('session_participant_id').notNull().references(() => sessionParticipants.id, { onDelete: 'cascade' }),
+  share: real('share').notNull().default(1),
+});
+
+export type Participant = typeof participants.$inferSelect;
+export type NewParticipant = typeof participants.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
+export type SessionParticipant = typeof sessionParticipants.$inferSelect;
+export type NewSessionParticipant = typeof sessionParticipants.$inferInsert;
+export type ExpenseTemplate = typeof expenseTemplates.$inferSelect;
+export type NewExpenseTemplate = typeof expenseTemplates.$inferInsert;
+export type Expense = typeof expenses.$inferSelect;
+export type NewExpense = typeof expenses.$inferInsert;
+export type ExpenseAssignment = typeof expenseAssignments.$inferSelect;
+export type NewExpenseAssignment = typeof expenseAssignments.$inferInsert;
