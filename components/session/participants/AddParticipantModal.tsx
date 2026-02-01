@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Input, Button, CreateNewButton, CountSelector } from '@/components/ui';
 import { PERSON_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
-
-interface Participant {
-  id: number;
-  name: string;
-  activityScore: number;
-  recentPersonCount: number;
-}
+import type { ParticipantSuggestion } from '@/lib/types';
 
 interface AddParticipantModalProps {
   isOpen: boolean;
@@ -26,7 +20,7 @@ export function AddParticipantModal({
   existingParticipantIds,
   onAdd,
 }: AddParticipantModalProps) {
-  const [suggestions, setSuggestions] = useState<Participant[]>([]);
+  const [suggestions, setSuggestions] = useState<ParticipantSuggestion[]>([]);
   const [newName, setNewName] = useState('');
   const [personCount, setPersonCount] = useState(1);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -49,7 +43,7 @@ export function AddParticipantModal({
     (p) => !existingParticipantIds.includes(p.id)
   );
 
-  const handleSelectExisting = async (participant: Participant) => {
+  const handleSelectExisting = async (participant: ParticipantSuggestion) => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/sessions/${sessionId}/participants`, {

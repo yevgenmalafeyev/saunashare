@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { sessions } from '@/lib/db/schema';
-import { getSessionParticipants, getExpensesWithAssignments } from '@/lib/db/queries';
+import { getSessionParticipantsWithPayment, getExpensesWithAssignments } from '@/lib/db/queries';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { BillDisplay } from '@/components/session/billing/BillDisplay';
@@ -25,10 +25,20 @@ export default async function BillDisplayPage({ params }: DisplayPageProps) {
     notFound();
   }
 
-  const allParticipants = await getSessionParticipants(sessionId);
+  const allParticipants = await getSessionParticipantsWithPayment(sessionId);
   const expensesWithAssignments = await getExpensesWithAssignments(sessionId);
 
   const bills = calculateBills(allParticipants, expensesWithAssignments);
+
+  // Add payment status to bills
+  const billsWithPayment = bills.map((bill) => {
+    const participant = allParticipants.find((p) => p.id === bill.sessionParticipantId);
+    return {
+      ...bill,
+      hasPaid: participant?.hasPaid ?? false,
+    };
+  });
+
   const grandTotal = bills.reduce((sum, b) => sum + b.total, 0);
   const expenseTotal = expensesWithAssignments.reduce(
     (sum, e) => sum + (e.totalCost || 0),
@@ -38,7 +48,7 @@ export default async function BillDisplayPage({ params }: DisplayPageProps) {
 
   return (
     <BillDisplay
-      bills={bills}
+      bills={billsWithPayment}
       grandTotal={grandTotal}
       sessionName={session.name}
       sessionId={sessionId}

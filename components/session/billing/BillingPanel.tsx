@@ -50,7 +50,7 @@ export function BillingPanel({ sessionId, onUpdate, initialMode = 'request' }: B
 
       {mode === 'request' && <RequestBill sessionId={sessionId} />}
       {mode === 'match' && <MatchBill sessionId={sessionId} onUpdate={onUpdate} onApplied={() => setMode('issue')} />}
-      {mode === 'issue' && <IssueBill sessionId={sessionId} />}
+      {mode === 'issue' && <IssueBill sessionId={sessionId} onUpdate={onUpdate} />}
     </div>
   );
 }

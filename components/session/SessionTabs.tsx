@@ -63,14 +63,8 @@ export function SessionTabs({ sessionId }: SessionTabsProps) {
     return () => window.removeEventListener('participantChange', handleRefresh);
   }, [handleRefresh]);
 
+  // Check billing status for participants tab (to enable payment toggle) and billing tab
   useEffect(() => {
-    const mode = searchParams.get('mode');
-    const shouldCheckBilling = activeTab === 'billing' && mode === 'issue';
-
-    if (!shouldCheckBilling) {
-      return;
-    }
-
     let cancelled = false;
     fetch(`/api/sessions/${sessionId}/billing?type=calculate`)
       .then((res) => res.ok ? res.json() : null)
@@ -86,7 +80,7 @@ export function SessionTabs({ sessionId }: SessionTabsProps) {
       });
 
     return () => { cancelled = true; };
-  }, [activeTab, searchParams, sessionId, refreshKey]);
+  }, [sessionId, refreshKey]);
 
   return (
     <div className="flex flex-col">
@@ -96,7 +90,7 @@ export function SessionTabs({ sessionId }: SessionTabsProps) {
 
       <div className="flex-1">
         {activeTab === 'participants' && (
-          <ParticipantList key={refreshKey} sessionId={sessionId} onUpdate={handleRefresh} />
+          <ParticipantList key={refreshKey} sessionId={sessionId} onUpdate={handleRefresh} billingReady={billingReady} />
         )}
         {activeTab === 'expenses' && (
           <ExpenseList key={refreshKey} sessionId={sessionId} onUpdate={handleRefresh} />

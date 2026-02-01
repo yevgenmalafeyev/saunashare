@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Spinner } from '@/components/ui';
+import { Button, Spinner, CheckIcon, CopyIcon } from '@/components/ui';
 import { FEEDBACK_TIMEOUT_MS } from '@/lib/constants';
 
 interface RequestBillProps {
@@ -11,11 +11,12 @@ interface RequestBillProps {
 interface SmsContact {
   phone: string;
   name: string;
+  key: string;
 }
 
 const SMS_CONTACTS: SmsContact[] = [
-  { phone: '+351924689616', name: 'Artur' },
-  { phone: '+351963383623', name: 'Andrey' },
+  { phone: '+351924689616', name: 'Artur', key: 'artur' },
+  { phone: '+351963383623', name: 'Andrey', key: 'andrey' },
 ];
 
 function SmsLink({ phone, name, body }: SmsContact & { body: string }) {
@@ -32,27 +33,37 @@ function SmsLink({ phone, name, body }: SmsContact & { body: string }) {
   );
 }
 
-function copyToClipboard(text: string): void {
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.style.position = 'fixed';
-  textarea.style.left = '-9999px';
-  document.body.appendChild(textarea);
-  textarea.select();
-  textarea.setSelectionRange(0, textarea.value.length);
-  document.execCommand('copy');
-  document.body.removeChild(textarea);
+async function copyToClipboard(text: string): Promise<void> {
+  if (navigator.clipboard) {
+    await navigator.clipboard.writeText(text);
+  } else {
+    // Fallback for older browsers
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  }
 }
 
 export function RequestBill({ sessionId }: RequestBillProps) {
   const [billText, setBillText] = useState('');
+  const [dutyPerson, setDutyPerson] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/sessions/${sessionId}/billing?type=request`)
-      .then((res) => res.ok ? res.json() : null)
-      .then((data) => data && setBillText(data.text))
+    Promise.all([
+      fetch(`/api/sessions/${sessionId}/billing?type=request`).then((res) => res.ok ? res.json() : null),
+      fetch(`/api/sessions/${sessionId}`).then((res) => res.ok ? res.json() : null),
+    ])
+      .then(([billingData, sessionData]) => {
+        if (billingData) setBillText(billingData.text);
+        if (sessionData) setDutyPerson(sessionData.dutyPerson);
+      })
       .finally(() => setIsLoading(false));
   }, [sessionId]);
 
@@ -80,24 +91,22 @@ export function RequestBill({ sessionId }: RequestBillProps) {
       >
         {copied ? (
           <>
-            <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
+            <CheckIcon className="w-5 h-5 mr-2 inline" />
             Copied!
           </>
         ) : (
           <>
-            <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
+            <CopyIcon className="w-5 h-5 mr-2 inline" />
             Copy to Clipboard
           </>
         )}
       </Button>
 
-      {SMS_CONTACTS.map((contact) => (
-        <SmsLink key={contact.phone} {...contact} body={billText} />
-      ))}
+      {SMS_CONTACTS
+        .filter((contact) => !dutyPerson || contact.key === dutyPerson)
+        .map((contact) => (
+          <SmsLink key={contact.phone} phone={contact.phone} name={contact.name} body={billText} />
+        ))}
 
       <p className="text-sm text-stone-500 text-center">
         Show this text to the sauna staff to get your bill

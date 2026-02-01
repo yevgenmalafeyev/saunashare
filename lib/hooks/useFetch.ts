@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UseFetchOptions {
   immediate?: boolean;
@@ -60,17 +60,16 @@ export function useMultiFetch<T extends Record<string, unknown>>(
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const urlsRef = useRef(urls);
 
-  // Update ref when urls change
-  urlsRef.current = urls;
+  // Serialize URLs for dependency tracking
+  const urlsKey = JSON.stringify(urls);
 
   const fetchAll = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const entries = Object.entries(urlsRef.current);
+      const entries = Object.entries(urls);
       const results = await Promise.all(
         entries.map(async ([key, url]) => {
           const res = await fetch(url as string);
@@ -85,11 +84,57 @@ export function useMultiFetch<T extends Record<string, unknown>>(
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlsKey]);
 
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
 
   return { data, isLoading, error, refetch: fetchAll };
+}
+
+interface UseMutateOptions<T> {
+  onSuccess?: (data: T) => void;
+  onError?: (error: Error) => void;
+}
+
+interface UseMutateResult<TData, TVariables> {
+  mutate: (variables: TVariables) => Promise<TData | null>;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+/**
+ * Hook for POST/PUT/PATCH/DELETE operations with loading state management
+ */
+export function useMutate<TData, TVariables = void>(
+  mutationFn: (variables: TVariables) => Promise<TData>,
+  options: UseMutateOptions<TData> = {}
+): UseMutateResult<TData, TVariables> {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const mutate = useCallback(
+    async (variables: TVariables): Promise<TData | null> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await mutationFn(variables);
+        options.onSuccess?.(result);
+        return result;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Mutation failed');
+        setError(error);
+        options.onError?.(error);
+        return null;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [mutationFn, options]
+  );
+
+  return { mutate, isLoading, error };
 }

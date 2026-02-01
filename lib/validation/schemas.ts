@@ -55,6 +55,7 @@ function validate<T>(
 // Session schemas
 export interface CreateSessionBody {
   name: string;
+  dutyPerson?: 'artur' | 'andrey' | null;
 }
 
 export function validateCreateSession(data: unknown): ValidationResult<CreateSessionBody> {
@@ -62,7 +63,10 @@ export function validateCreateSession(data: unknown): ValidationResult<CreateSes
     data,
     (obj) => {
       if (!isNonEmptyString(obj.name)) return null;
-      return { name: obj.name.trim() };
+      const dutyPerson = obj.dutyPerson === 'artur' || obj.dutyPerson === 'andrey'
+        ? obj.dutyPerson
+        : null;
+      return { name: obj.name.trim(), dutyPerson };
     },
     'Name is required and must be a non-empty string'
   );
@@ -204,5 +208,49 @@ export function validateUpdateAssignments(data: unknown): ValidationResult<Updat
       return { assignments: assignments as UpdateAssignmentsBody['assignments'] };
     },
     'assignments must be an array of { sessionParticipantId: number, share: number }'
+  );
+}
+
+// User expense schemas (for dynamic expense sharing)
+export interface CreateUserExpenseBody {
+  name: string;
+  share?: number;
+  sessionParticipantId: number;
+}
+
+export function validateCreateUserExpense(data: unknown): ValidationResult<CreateUserExpenseBody> {
+  return validate(
+    data,
+    (obj) => {
+      if (!isNonEmptyString(obj.name)) return null;
+      if (typeof obj.sessionParticipantId !== 'number') return null;
+      const share = typeof obj.share === 'number' && obj.share > 0 ? obj.share : 1;
+      return {
+        name: obj.name.trim(),
+        share,
+        sessionParticipantId: obj.sessionParticipantId,
+      };
+    },
+    'name and sessionParticipantId are required, share must be a positive number'
+  );
+}
+
+export interface UpdateUserShareBody {
+  sessionParticipantId: number;
+  newShare: number;
+}
+
+export function validateUpdateUserShare(data: unknown): ValidationResult<UpdateUserShareBody> {
+  return validate(
+    data,
+    (obj) => {
+      if (typeof obj.sessionParticipantId !== 'number') return null;
+      if (typeof obj.newShare !== 'number' || obj.newShare < 0) return null;
+      return {
+        sessionParticipantId: obj.sessionParticipantId,
+        newShare: obj.newShare,
+      };
+    },
+    'sessionParticipantId and newShare are required, newShare must be a non-negative number'
   );
 }

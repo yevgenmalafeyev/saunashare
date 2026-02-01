@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessionParticipants, participants, expenseAssignments } from '@/lib/db/schema';
-import { getDefaultExpense, getSessionParticipants } from '@/lib/db/queries';
+import { sessionParticipants, participants, expenseAssignments, sessionParticipantMeta } from '@/lib/db/schema';
+import { getDefaultExpense, getSessionParticipantsWithPayment } from '@/lib/db/queries';
 import { eq, and } from 'drizzle-orm';
 import { parseRouteParams, apiError, apiSuccess } from '@/lib/utils/api';
 import { validateCreateParticipant, validateAndRespond } from '@/lib/validation/schemas';
@@ -10,7 +10,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id: sessionId } = await parseRouteParams(params);
-  const results = await getSessionParticipants(sessionId);
+  const results = await getSessionParticipantsWithPayment(sessionId);
   return apiSuccess(results);
 }
 
@@ -90,6 +90,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       share: personCount,
     });
   }
+
+  // Create session participant meta record
+  await db.insert(sessionParticipantMeta).values({
+    sessionParticipantId: sessionParticipant.id,
+    hasPaid: false,
+    joinedAt: new Date(),
+  });
 
   return apiSuccess(sessionParticipant, 201);
 }

@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, Input, Button, CreateNewButton } from '@/components/ui';
 import { ITEM_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
-
-interface ExpenseTemplate {
-  id: number;
-  name: string;
-  usageCount: number;
-  isSystem: boolean;
-}
+import type { ExpenseTemplate } from '@/lib/types';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -115,12 +109,12 @@ export function AddExpenseModal({
                       )}
                     </div>
                     <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((count) => (
+                      {[0.5, 1, 2, 3, 4].map((count) => (
                         <button
                           key={count}
                           onClick={() => handleSelectTemplate(template.name, count)}
                           disabled={isLoading}
-                          className="w-9 h-9 flex items-center justify-center bg-white hover:bg-amber-50 border border-stone-200 hover:border-amber-400 rounded-lg font-medium text-stone-700 hover:text-amber-700 transition-colors"
+                          className="w-9 h-9 flex items-center justify-center bg-white hover:bg-amber-50 border border-stone-200 hover:border-amber-400 rounded-lg font-medium text-stone-700 hover:text-amber-700 transition-colors text-sm"
                         >
                           {count}
                         </button>
@@ -153,12 +147,12 @@ export function AddExpenseModal({
             </label>
             {!isExtendedCount ? (
               <div className="flex gap-2">
-                {ITEM_COUNT_OPTIONS.filter((c) => c < 6).map((count) => (
+                {ITEM_COUNT_OPTIONS.filter((c) => c < 5).map((count) => (
                   <button
                     key={count}
                     onClick={() => setItemCount(count)}
                     className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                      itemCount === count && itemCount < 6
+                      itemCount === count && itemCount < 5
                         ? 'bg-amber-600 text-white'
                         : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                     }`}
@@ -169,15 +163,15 @@ export function AddExpenseModal({
                 <button
                   onClick={() => {
                     setIsExtendedCount(true);
-                    if (itemCount < 6) setItemCount(6);
+                    if (itemCount < 5) setItemCount(5);
                   }}
                   className={`flex-1 py-3 rounded-xl font-medium transition-all ${
-                    itemCount >= 6
+                    itemCount >= 5
                       ? 'bg-amber-600 text-white'
                       : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                   }`}
                 >
-                  6+
+                  5+
                 </button>
               </div>
             ) : (
@@ -185,7 +179,7 @@ export function AddExpenseModal({
                 <button
                   onClick={() => {
                     setIsExtendedCount(false);
-                    if (itemCount >= 6) setItemCount(1);
+                    if (itemCount >= 5) setItemCount(1);
                   }}
                   className="w-12 h-12 flex items-center justify-center bg-stone-100 text-stone-600 hover:bg-stone-200 rounded-xl font-medium transition-all"
                 >
@@ -195,7 +189,7 @@ export function AddExpenseModal({
                 </button>
                 <div className="flex-1 flex items-center justify-center gap-3">
                   <button
-                    onClick={() => setItemCount(Math.max(6, itemCount - 1))}
+                    onClick={() => setItemCount(Math.max(5, itemCount - 1))}
                     className="w-12 h-12 flex items-center justify-center bg-stone-100 text-stone-600 hover:bg-stone-200 rounded-xl font-bold text-xl transition-all"
                   >
                     −

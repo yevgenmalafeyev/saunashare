@@ -9,6 +9,7 @@ export interface SessionParticipant {
   participantId: number;
   name: string;
   personCount: number;
+  hasPaid?: boolean;
 }
 
 /** An assignment of an expense to a participant with their share */
@@ -28,11 +29,13 @@ export interface Expense {
 
 /** A calculated bill for a single participant */
 export interface ParticipantBill {
+  sessionParticipantId: number;
   participantId: number;
   participantName: string;
   personCount: number;
   total: number;
   breakdown: {
+    expenseId?: number;
     expenseName: string;
     share: number;
     cost: number;
@@ -44,4 +47,20 @@ export interface ExtractedExpense {
   name: string;
   count: number;
   cost: number;
+}
+
+/** Expense template for quick expense creation */
+export interface ExpenseTemplate {
+  id: number;
+  name: string;
+  usageCount: number;
+  isSystem: boolean;
+}
+
+/** Participant suggestion for adding to session */
+export interface ParticipantSuggestion {
+  id: number;
+  name: string;
+  activityScore: number;
+  recentPersonCount: number;
 }

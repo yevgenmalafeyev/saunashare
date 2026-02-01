@@ -7,10 +7,18 @@ interface SwipeableRowProps {
   children: ReactNode;
   onAction: () => void;
   actionLabel: string;
-  actionColor?: 'red' | 'amber';
+  actionColor?: 'red' | 'amber' | 'green';
   confirmTitle?: string;
   confirmMessage?: string;
+  // Optional left action (swipe right to reveal)
+  leftAction?: {
+    onAction: () => void;
+    label: string;
+    color?: 'red' | 'amber' | 'green';
+  };
 }
+
+type OpenSide = 'none' | 'left' | 'right';
 
 export function SwipeableRow({
   children,
@@ -19,18 +27,43 @@ export function SwipeableRow({
   actionColor = 'red',
   confirmTitle,
   confirmMessage,
+  leftAction,
 }: SwipeableRowProps) {
   const [offsetX, setOffsetX] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [openSide, setOpenSide] = useState<OpenSide>('none');
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<'left' | 'right'>('right');
   const startXRef = useRef(0);
   const currentXRef = useRef(0);
-  const offsetRef = useRef(0); // Track offset during drag
+  const offsetRef = useRef(0);
   const isDraggingRef = useRef(false);
+
+  const getColorClass = (color: 'red' | 'amber' | 'green' = 'red') => {
+    switch (color) {
+      case 'red': return 'bg-red-500';
+      case 'amber': return 'bg-amber-500';
+      case 'green': return 'bg-green-500';
+    }
+  };
+
+  const getConfirmBtnClass = (color: 'red' | 'amber' | 'green' = 'red') => {
+    switch (color) {
+      case 'red': return 'bg-red-600 hover:bg-red-700';
+      case 'amber': return 'bg-amber-600 hover:bg-amber-700';
+      case 'green': return 'bg-green-600 hover:bg-green-700';
+    }
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
-    currentXRef.current = isOpen ? -SWIPE_ACTION_WIDTH_PX : 0;
+    // Set initial position based on which side is open
+    if (openSide === 'right') {
+      currentXRef.current = -SWIPE_ACTION_WIDTH_PX;
+    } else if (openSide === 'left') {
+      currentXRef.current = SWIPE_ACTION_WIDTH_PX;
+    } else {
+      currentXRef.current = 0;
+    }
     offsetRef.current = currentXRef.current;
     isDraggingRef.current = true;
   };
@@ -41,8 +74,11 @@ export function SwipeableRow({
     const diff = e.touches[0].clientX - startXRef.current;
     let newOffset = currentXRef.current + diff;
 
-    // Clamp the offset
-    newOffset = Math.max(-SWIPE_ACTION_WIDTH_PX, Math.min(0, newOffset));
+    // Clamp the offset based on available actions
+    const minOffset = -SWIPE_ACTION_WIDTH_PX;
+    const maxOffset = leftAction ? SWIPE_ACTION_WIDTH_PX : 0;
+    newOffset = Math.max(minOffset, Math.min(maxOffset, newOffset));
+
     offsetRef.current = newOffset;
     setOffsetX(newOffset);
   };
@@ -50,57 +86,83 @@ export function SwipeableRow({
   const handleTouchEnd = () => {
     isDraggingRef.current = false;
 
-    // Use ref value to avoid stale state
+    // Determine which side to snap to
     if (offsetRef.current <= -SWIPE_THRESHOLD_PX) {
+      // Swipe left - show right action
       setOffsetX(-SWIPE_ACTION_WIDTH_PX);
-      setIsOpen(true);
+      setOpenSide('right');
+    } else if (leftAction && offsetRef.current >= SWIPE_THRESHOLD_PX) {
+      // Swipe right - show left action
+      setOffsetX(SWIPE_ACTION_WIDTH_PX);
+      setOpenSide('left');
     } else {
+      // Return to center
       setOffsetX(0);
-      setIsOpen(false);
+      setOpenSide('none');
     }
   };
 
-  const handleActionClick = () => {
+  const handleRightActionClick = () => {
     if (confirmTitle || confirmMessage) {
+      setConfirmAction('right');
       setShowConfirm(true);
     } else {
       onAction();
-      setOffsetX(0);
-      setIsOpen(false);
+      close();
+    }
+  };
+
+  const handleLeftActionClick = () => {
+    if (leftAction) {
+      leftAction.onAction();
+      close();
     }
   };
 
   const handleConfirm = () => {
-    onAction();
+    if (confirmAction === 'right') {
+      onAction();
+    } else if (leftAction) {
+      leftAction.onAction();
+    }
     setShowConfirm(false);
-    setOffsetX(0);
-    setIsOpen(false);
+    close();
   };
 
   const handleCancel = () => {
     setShowConfirm(false);
-    setOffsetX(0);
-    setIsOpen(false);
+    close();
   };
 
   const close = () => {
     setOffsetX(0);
-    setIsOpen(false);
+    setOpenSide('none');
   };
 
-  const bgColor = actionColor === 'red' ? 'bg-red-500' : 'bg-amber-500';
-  const confirmBtnColor = actionColor === 'red' ? 'bg-red-600 hover:bg-red-700' : 'bg-amber-600 hover:bg-amber-700';
+  const rightBgColor = getColorClass(actionColor);
+  const leftBgColor = leftAction ? getColorClass(leftAction.color) : '';
+  const confirmBtnColor = getConfirmBtnClass(confirmAction === 'right' ? actionColor : leftAction?.color);
 
   return (
     <>
       <div className="relative overflow-hidden rounded-xl">
-        {/* Action button behind */}
+        {/* Right action button (revealed by swiping left) */}
         <div
-          className={`absolute inset-y-0 right-0 w-20 ${bgColor} flex items-center justify-center`}
-          onClick={handleActionClick}
+          className={`absolute inset-y-0 right-0 w-20 ${rightBgColor} flex items-center justify-center`}
+          onClick={handleRightActionClick}
         >
           <span className="text-white font-medium text-sm">{actionLabel}</span>
         </div>
+
+        {/* Left action button (revealed by swiping right) */}
+        {leftAction && (
+          <div
+            className={`absolute inset-y-0 left-0 w-20 ${leftBgColor} flex items-center justify-center`}
+            onClick={handleLeftActionClick}
+          >
+            <span className="text-white font-medium text-sm text-center px-1">{leftAction.label}</span>
+          </div>
+        )}
 
         {/* Main content */}
         <div
@@ -109,7 +171,7 @@ export function SwipeableRow({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onClick={isOpen ? close : undefined}
+          onClick={openSide !== 'none' ? close : undefined}
         >
           {children}
         </div>

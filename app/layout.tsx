@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { Providers } from "@/components/providers/Providers";
 
 export const metadata: Metadata = {
   title: "Banha - Sauna Cost Sharing",
@@ -36,7 +37,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased bg-stone-50 min-h-screen">
         <ServiceWorkerRegistration />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

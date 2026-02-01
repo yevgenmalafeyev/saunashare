@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Spinner, CountSelector, SwipeableRow, FloatingButton } from '@/components/ui';
+import { Spinner, CountSelector, SwipeableRow } from '@/components/ui';
 import { AddExpenseModal } from './AddExpenseModal';
 import { AssignmentEditor } from './AssignmentEditor';
 import type { SessionParticipant, Expense } from '@/lib/types';
@@ -76,8 +76,20 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
       </div>
 
       {expenses.length === 0 ? (
-        <div className="text-center py-8 text-stone-500">
-          No expenses yet. Add an expense to get started.
+        <div className="space-y-4">
+          <div className="text-center py-8 text-stone-500">
+            No expenses yet. Add an expense to get started.
+          </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-14 h-14 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 active:scale-95 transition-transform duration-200 flex items-center justify-center"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
@@ -121,7 +133,7 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
 
                         <button
                           onClick={() => setEditingExpense(expense)}
-                          className="relative p-2 text-stone-500 hover:bg-stone-100 rounded-lg transition-colors"
+                          className="relative p-2 -mr-2 text-stone-500 hover:bg-stone-100 rounded-lg transition-colors"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -159,6 +171,16 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
             </SwipeableRow>
             );
           })}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="w-14 h-14 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 active:scale-95 transition-transform duration-200 flex items-center justify-center"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
@@ -186,8 +208,6 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
           onUpdate();
         }}
       />
-
-      <FloatingButton onClick={() => setIsAddModalOpen(true)} storageKey="fab-expenses" />
     </div>
   );
 }

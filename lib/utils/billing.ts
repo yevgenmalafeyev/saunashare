@@ -21,7 +21,7 @@ export function generateBillRequestText(
     .filter(e => e.name !== DEFAULT_EXPENSE_NAME)
     .map(e => `${e.name} - ${e.itemCount}`);
 
-  let text = `Посчитайте нас, пожалуйста.\n${totalPeople} человек`;
+  let text = `Посчитайте нас, пожалуйста.\n${totalPeople} чел`;
 
   if (additionalItems.length > 0) {
     text += '\n' + additionalItems.join('\n');
@@ -34,21 +34,19 @@ export function calculateBills(
   participants: { id: number; participantId: number; name: string; personCount: number }[],
   expenses: ExpenseWithAssignments[]
 ): ParticipantBill[] {
-  // Build lookup maps for O(1) access instead of O(n) array.find() calls
-  const sessionParticipantToParticipant = new Map(
-    participants.map(p => [p.id, p.participantId])
-  );
-  const billsByParticipantId = new Map<number, ParticipantBill>();
+  // Build lookup map for O(1) access
+  const billsBySessionParticipantId = new Map<number, ParticipantBill>();
 
   const bills: ParticipantBill[] = participants.map(p => {
     const bill: ParticipantBill = {
+      sessionParticipantId: p.id,
       participantId: p.participantId,
       participantName: p.name,
       personCount: p.personCount,
       total: 0,
       breakdown: [],
     };
-    billsByParticipantId.set(p.participantId, bill);
+    billsBySessionParticipantId.set(p.id, bill);
     return bill;
   });
 
@@ -61,14 +59,12 @@ export function calculateBills(
     const costPerShare = expense.totalCost / totalShares;
 
     for (const assignment of expense.assignments) {
-      const participantId = sessionParticipantToParticipant.get(assignment.sessionParticipantId);
-      if (participantId === undefined) continue;
-
-      const bill = billsByParticipantId.get(participantId);
+      const bill = billsBySessionParticipantId.get(assignment.sessionParticipantId);
       if (bill) {
         const cost = assignment.share * costPerShare;
         bill.total += cost;
         bill.breakdown.push({
+          expenseId: expense.id,
           expenseName: expense.name,
           share: assignment.share,
           cost,

@@ -21,9 +21,9 @@ export function CountSelector({ options, value, onChange, size = 'md', extendedM
     ? 'w-7 h-8 text-sm'
     : 'w-8 h-10';
 
-  // For extended mode, filter out options >= 6
-  const displayOptions = extendedMode ? options.filter((o) => o < 6) : options;
-  const showExtendedUI = extendedMode && (isExtended || value >= 6);
+  // For extended mode, filter out options > 5 (keep up to 4, show 5+ as special button)
+  const displayOptions = extendedMode ? options.filter((o) => o < 5) : options;
+  const showExtendedUI = extendedMode && (isExtended || value >= 5);
 
   if (showExtendedUI) {
     return (
@@ -31,7 +31,7 @@ export function CountSelector({ options, value, onChange, size = 'md', extendedM
         <button
           onClick={() => {
             setIsExtended(false);
-            if (value >= 6) onChange(1);
+            if (value >= 5) onChange(1);
           }}
           className={`${smallBtnClasses} rounded-lg font-medium transition-all bg-stone-100 text-stone-600 hover:bg-stone-200 flex items-center justify-center`}
         >
@@ -40,7 +40,7 @@ export function CountSelector({ options, value, onChange, size = 'md', extendedM
           </svg>
         </button>
         <button
-          onClick={() => onChange(Math.max(6, value - 1))}
+          onClick={() => onChange(Math.max(5, value - 1))}
           className={`${smallBtnClasses} rounded-lg font-bold transition-all bg-stone-100 text-stone-600 hover:bg-stone-200`}
         >
           −
@@ -65,7 +65,7 @@ export function CountSelector({ options, value, onChange, size = 'md', extendedM
           key={option}
           onClick={() => onChange(option)}
           className={`${sizeClasses} rounded-lg font-medium transition-all ${
-            value === option && value < 6
+            value === option && value < 5
               ? 'bg-amber-600 text-white'
               : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
           }`}
@@ -77,15 +77,15 @@ export function CountSelector({ options, value, onChange, size = 'md', extendedM
         <button
           onClick={() => {
             setIsExtended(true);
-            if (value < 6) onChange(6);
+            if (value < 5) onChange(5);
           }}
           className={`${sizeClasses} rounded-lg font-medium transition-all ${
-            value >= 6
+            value >= 5
               ? 'bg-amber-600 text-white'
               : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
           }`}
         >
-          6+
+          5+
         </button>
       )}
     </div>

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
 import { sessionParticipants, expenses } from '@/lib/db/schema';
-import { getSessionParticipants, getExpensesWithAssignments } from '@/lib/db/queries';
+import { getSessionParticipantsWithPayment, getExpensesWithAssignments } from '@/lib/db/queries';
 import { eq } from 'drizzle-orm';
 import { generateBillRequestText, calculateBills } from '@/lib/utils/billing';
 import { extractExpensesFromImage } from '@/lib/claude/image-processor';
@@ -58,7 +58,7 @@ async function handleRequest(sessionId: number) {
 }
 
 async function handleCalculate(sessionId: number) {
-  const allParticipants = await getSessionParticipants(sessionId);
+  const allParticipants = await getSessionParticipantsWithPayment(sessionId);
   const expensesWithAssignments = await getExpensesWithAssignments(sessionId);
 
   const issues: string[] = [];
@@ -81,14 +81,31 @@ async function handleCalculate(sessionId: number) {
 
   const ready = issues.length === 0;
   const bills = ready ? calculateBills(allParticipants, expensesWithAssignments) : [];
-  const grandTotal = bills.reduce((sum, b) => sum + b.total, 0);
+
+  // Add payment status to each bill
+  const billsWithPayment = bills.map((bill) => {
+    const participant = allParticipants.find((p) => p.id === bill.sessionParticipantId);
+    return {
+      ...bill,
+      hasPaid: participant?.hasPaid ?? false,
+    };
+  });
+
+  const grandTotal = billsWithPayment.reduce((sum, b) => sum + b.total, 0);
   const expenseTotal = expensesWithAssignments.reduce(
     (sum, e) => sum + (e.totalCost || 0),
     0
   );
   const balance = grandTotal - expenseTotal;
 
-  return apiSuccess({ ready, issues, bills, grandTotal, expenseTotal, balance });
+  // Include expenses missing cost for manual entry
+  const missingCostExpenses = expensesWithoutCost.map((e) => ({
+    id: e.id,
+    name: e.name,
+    itemCount: e.itemCount,
+  }));
+
+  return apiSuccess({ ready, issues, bills: billsWithPayment, grandTotal, expenseTotal, balance, missingCostExpenses });
 }
 
 async function handleMatch(sessionId: number, request: NextRequest) {

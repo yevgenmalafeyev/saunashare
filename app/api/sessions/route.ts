@@ -39,7 +39,10 @@ export async function POST(request: NextRequest) {
 
   const [session] = await db
     .insert(sessions)
-    .values({ name: validated.data.name })
+    .values({
+      name: validated.data.name,
+      dutyPerson: validated.data.dutyPerson,
+    })
     .returning();
 
   // Auto-create default expense

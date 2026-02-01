@@ -11,6 +11,7 @@ export const sessions = sqliteTable('sessions', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+  dutyPerson: text('duty_person'), // 'artur' | 'andrey' | null
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });
@@ -44,6 +45,20 @@ export const expenseAssignments = sqliteTable('expense_assignments', {
   share: real('share').notNull().default(1),
 });
 
+export const sessionParticipantMeta = sqliteTable('session_participant_meta', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  sessionParticipantId: integer('session_participant_id')
+    .notNull()
+    .references(() => sessionParticipants.id, { onDelete: 'cascade' }),
+  hasPaid: integer('has_paid', { mode: 'boolean' }).notNull().default(false),
+  joinedAt: integer('joined_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
+export const appConfig = sqliteTable('app_config', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
+
 export type Participant = typeof participants.$inferSelect;
 export type NewParticipant = typeof participants.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
@@ -56,3 +71,7 @@ export type Expense = typeof expenses.$inferSelect;
 export type NewExpense = typeof expenses.$inferInsert;
 export type ExpenseAssignment = typeof expenseAssignments.$inferSelect;
 export type NewExpenseAssignment = typeof expenseAssignments.$inferInsert;
+export type SessionParticipantMeta = typeof sessionParticipantMeta.$inferSelect;
+export type NewSessionParticipantMeta = typeof sessionParticipantMeta.$inferInsert;
+export type AppConfig = typeof appConfig.$inferSelect;
+export type NewAppConfig = typeof appConfig.$inferInsert;

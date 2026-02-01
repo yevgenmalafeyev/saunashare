@@ -37,6 +37,19 @@ function initializeDatabase() {
     if (!existing) {
       sqlite.prepare('INSERT INTO expense_templates (name, usage_count, is_system) VALUES (?, 0, 1)').run('Время, чай, вода');
     }
+
+    // Seed app config tokens and phone numbers if they don't exist
+    const seedConfig = (key: string, value: string) => {
+      const exists = sqlite.prepare('SELECT key FROM app_config WHERE key = ?').get(key);
+      if (!exists) {
+        sqlite.prepare('INSERT INTO app_config (key, value) VALUES (?, ?)').run(key, value);
+      }
+    };
+
+    seedConfig('admin-token', 'cd3d0ebea24eb99fc7e7c220207b1dec');
+    seedConfig('user-token', 'f6b8fda5ba595d9233bc55f0675b2174');
+    seedConfig('artur-phone', '+351924689616');
+    seedConfig('andrey-phone', '+351963383623');
   } catch {
     // Ignore initialization errors during build (tables may not exist yet)
   }

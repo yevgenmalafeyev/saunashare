@@ -1,11 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ParticipantBill } from '@/lib/types';
 
+interface BillWithPayment extends ParticipantBill {
+  hasPaid?: boolean;
+}
+
 interface BillDisplayProps {
-  bills: ParticipantBill[];
+  bills: BillWithPayment[];
   grandTotal: number;
   sessionName: string;
   sessionId: number;
@@ -13,12 +17,35 @@ interface BillDisplayProps {
   expenseTotal?: number;
 }
 
-export function BillDisplay({ bills, sessionName, sessionId, balance = 0, expenseTotal }: BillDisplayProps) {
+const POLL_INTERVAL_MS = 15000; // 15 seconds
+
+export function BillDisplay({ bills: initialBills, sessionName, sessionId, balance = 0, expenseTotal }: BillDisplayProps) {
   const [isLandscape, setIsLandscape] = useState<boolean | null>(null);
   const [scale, setScale] = useState(1);
+  const [bills, setBills] = useState<BillWithPayment[]>(initialBills);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Poll for payment status updates
+  const fetchPaymentStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/billing?type=calculate`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.bills) {
+          setBills(data.bills);
+        }
+      }
+    } catch {
+      // Silently ignore fetch errors
+    }
+  }, [sessionId]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchPaymentStatus, POLL_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [fetchPaymentStatus]);
 
   // Hide body background/overflow for this fullscreen display
   useEffect(() => {
@@ -176,24 +203,37 @@ export function BillDisplay({ bills, sessionName, sessionId, balance = 0, expens
         {sortedBills.map((bill) => (
           <div
             key={bill.participantId}
-            className="bg-white/10 backdrop-blur-sm rounded-xl p-2 border border-white/20"
+            className={`backdrop-blur-sm rounded-xl p-2 border transition-colors duration-500 ${
+              bill.hasPaid
+                ? 'bg-green-500/30 border-green-400/50'
+                : 'bg-white/10 border-white/20'
+            }`}
           >
             <div className="text-center mb-1">
-              <div className="font-bold text-white leading-tight" style={{ fontSize: `${1.1 * scale}rem` }}>
+              <div className={`font-bold leading-tight flex items-center justify-center gap-1 ${
+                bill.hasPaid ? 'text-green-200' : 'text-white'
+              }`} style={{ fontSize: `${1.1 * scale}rem` }}>
                 {bill.participantName}
+                {bill.hasPaid && (
+                  <svg className="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
             </div>
 
-            <div className="font-black text-amber-300 text-center mb-1" style={{ fontSize: `${1.5 * scale}rem` }}>
+            <div className={`font-black text-center mb-1 ${
+              bill.hasPaid ? 'text-green-300' : 'text-amber-300'
+            }`} style={{ fontSize: `${1.5 * scale}rem` }}>
               {bill.total} €
             </div>
 
             {/* Expense details - hide in minimal mode */}
             {!minimalMode && (
-              <div className="space-y-0.5 text-white/70">
+              <div className={`space-y-0.5 ${bill.hasPaid ? 'text-green-200/70' : 'text-white/70'}`}>
                 {sortBreakdown(bill.breakdown).map((item, idx) => (
                   <div key={idx} className="flex justify-between leading-tight">
-                    <span className="truncate mr-1">{item.expenseName} <span className="text-white/50">x{item.share}</span></span>
+                    <span className="truncate mr-1">{item.expenseName} <span className={bill.hasPaid ? 'text-green-200/50' : 'text-white/50'}>x{item.share}</span></span>
                     <span className="flex-shrink-0">{item.cost.toFixed(0)} €</span>
                   </div>
                 ))}
