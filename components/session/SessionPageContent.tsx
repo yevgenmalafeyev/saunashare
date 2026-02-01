@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { SessionTabs } from './SessionTabs';
 import { UserSessionView } from '@/components/user';
+import { ArrowLeftIcon } from '@/components/ui';
 import { useAuth } from '@/lib/context/AuthContext';
 
 interface SessionPageContentProps {
@@ -23,9 +24,7 @@ export function SessionPageContent({ sessionId, sessionName }: SessionPageConten
             href="/"
             className="p-2 -ml-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
+            <ArrowLeftIcon className="w-6 h-6" />
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-bold text-stone-800">{sessionName}</h1>

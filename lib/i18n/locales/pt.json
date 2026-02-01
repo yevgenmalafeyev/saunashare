@@ -85,7 +85,7 @@
   },
   "user": {
     "welcome": "Bem-vindo à Banha de Ioga",
-    "noActiveSessions": "Não há sessões ativas",
+    "noActiveSessions": "Não há sessões abertas hoje",
     "waitForSession": "Aguarde a criação de uma sessão",
     "checkingIn": "A registar como",
     "checkedInAs": "Está registado como {{name}}",

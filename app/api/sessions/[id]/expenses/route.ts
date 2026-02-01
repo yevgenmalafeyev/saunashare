@@ -119,6 +119,16 @@ async function handleAdminExpense(sessionId: number, body: unknown) {
 
   const { name, itemCount } = validated.data;
 
+  // Check if expense with same name already exists in this session
+  const [existingExpense] = await db
+    .select()
+    .from(expenses)
+    .where(and(eq(expenses.sessionId, sessionId), eq(expenses.name, name)));
+
+  if (existingExpense) {
+    return apiError('Expense with this name already exists in session', 400);
+  }
+
   // Update or create expense template
   await updateExpenseTemplate(name);
 

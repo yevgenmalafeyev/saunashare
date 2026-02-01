@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Spinner, Button } from '@/components/ui';
+import { Spinner, Button, CheckCircleIcon } from '@/components/ui';
 import { JSON_HEADERS } from '@/lib/constants';
 import type { ParticipantBill } from '@/lib/types';
 
@@ -174,9 +174,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
                 )}
                 {bill.hasPaid && (
                   <span className="text-green-500" title="Paid">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
+                    <CheckCircleIcon className="w-5 h-5" />
                   </span>
                 )}
               </div>
@@ -218,7 +216,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
 
       <div className="bg-amber-100 border border-amber-300 rounded-xl p-4 flex items-center justify-between">
         <span className="font-bold text-amber-800">Grand Total</span>
-        <span className="text-2xl font-bold text-amber-800">{status.expenseTotal} €</span>
+        <span className="text-2xl font-bold text-amber-800">{status.grandTotal} €</span>
       </div>
     </div>
   );

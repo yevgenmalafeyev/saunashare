@@ -12,6 +12,7 @@ interface AddUserExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
   onExpenseAdded: () => void;
+  existingExpenseNames: string[];
 }
 
 export function AddUserExpenseModal({
@@ -20,6 +21,7 @@ export function AddUserExpenseModal({
   isOpen,
   onClose,
   onExpenseAdded,
+  existingExpenseNames,
 }: AddUserExpenseModalProps) {
   const { t } = useTranslation();
   const [templates, setTemplates] = useState<ExpenseTemplate[]>([]);
@@ -78,8 +80,10 @@ export function AddUserExpenseModal({
     onClose();
   };
 
-  // Filter out system expense template
-  const nonSystemTemplates = templates.filter((t) => !t.isSystem);
+  // Filter out system expense template and already added expenses
+  const availableTemplates = templates.filter(
+    (t) => !t.isSystem && !existingExpenseNames.includes(t.name)
+  );
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('user.addExpense')}>
@@ -126,9 +130,9 @@ export function AddUserExpenseModal({
         </div>
       ) : (
         <div className="space-y-4">
-          {nonSystemTemplates.length > 0 && (
+          {availableTemplates.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
-              {nonSystemTemplates
+              {availableTemplates
                 .sort((a, b) => b.usageCount - a.usageCount)
                 .map((template) => (
                   <button

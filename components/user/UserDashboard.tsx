@@ -100,7 +100,6 @@ export function UserDashboard() {
 
       {sessions.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-5xl mb-4">🧖</div>
           <p className="text-stone-500">{t('user.noActiveSessions')}</p>
           <p className="text-sm text-stone-400 mt-2">{t('user.waitForSession')}</p>
         </div>

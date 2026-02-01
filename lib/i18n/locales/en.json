@@ -85,7 +85,7 @@
   },
   "user": {
     "welcome": "Welcome to Banha de Ioga",
-    "noActiveSessions": "No active sessions",
+    "noActiveSessions": "No open sessions today",
     "waitForSession": "Wait for a session to be created",
     "checkingIn": "Checking in as",
     "checkedInAs": "You are checked in as {{name}}",

@@ -154,6 +154,7 @@ export function validateCreateExpense(data: unknown): ValidationResult<CreateExp
 }
 
 export interface UpdateExpenseBody {
+  name?: string;
   itemCount?: number;
   totalCost?: number | null;
 }
@@ -163,6 +164,11 @@ export function validateUpdateExpense(data: unknown): ValidationResult<UpdateExp
     data,
     (obj) => {
       const result: UpdateExpenseBody = {};
+
+      if ('name' in obj) {
+        if (!isNonEmptyString(obj.name)) return null;
+        result.name = (obj.name as string).trim();
+      }
 
       if ('itemCount' in obj) {
         if (!isNumberInRange(obj.itemCount, 1, 99)) return null;
@@ -176,7 +182,7 @@ export function validateUpdateExpense(data: unknown): ValidationResult<UpdateExp
 
       return result;
     },
-    'itemCount must be 1-99, totalCost must be a number or null'
+    'name must be non-empty string, itemCount must be 1-99, totalCost must be a number or null'
   );
 }
 

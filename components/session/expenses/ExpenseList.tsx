@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Spinner, CountSelector, SwipeableRow } from '@/components/ui';
+import { Spinner, CountSelector, SwipeableRow, PlusIcon } from '@/components/ui';
 import { AddExpenseModal } from './AddExpenseModal';
 import { AssignmentEditor } from './AssignmentEditor';
+import { EditExpenseModal } from './EditExpenseModal';
 import type { SessionParticipant, Expense } from '@/lib/types';
 import { ITEM_COUNT_OPTIONS, JSON_HEADERS, DEFAULT_EXPENSE_NAME } from '@/lib/constants';
 
@@ -18,6 +19,7 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [renamingExpense, setRenamingExpense] = useState<Expense | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -85,9 +87,7 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
               onClick={() => setIsAddModalOpen(true)}
               className="w-14 h-14 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 active:scale-95 transition-transform duration-200 flex items-center justify-center"
             >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
+              <PlusIcon className="w-7 h-7" />
             </button>
           </div>
         </div>
@@ -109,6 +109,11 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
                 onAction={() => handleDelete(expense.id)}
                 actionLabel="Delete"
                 actionColor="red"
+                leftAction={!isDefaultExpense ? {
+                  onAction: () => setRenamingExpense(expense),
+                  label: 'Edit',
+                  color: 'amber',
+                } : undefined}
               >
                 <div className="bg-white border border-stone-200 rounded-xl overflow-hidden">
                   <div className={`p-4 flex items-center gap-4 ${!isDefaultExpense ? 'border-b border-stone-100' : ''}`}>
@@ -176,9 +181,7 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
               onClick={() => setIsAddModalOpen(true)}
               className="w-14 h-14 bg-amber-600 text-white rounded-full shadow-lg hover:bg-amber-700 active:scale-95 transition-transform duration-200 flex items-center justify-center"
             >
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-              </svg>
+              <PlusIcon className="w-7 h-7" />
             </button>
           </div>
         </div>
@@ -203,6 +206,17 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
         expense={editingExpense}
         participants={participants}
         sessionId={sessionId}
+        onUpdate={() => {
+          fetchData();
+          onUpdate();
+        }}
+      />
+
+      <EditExpenseModal
+        isOpen={!!renamingExpense}
+        onClose={() => setRenamingExpense(null)}
+        sessionId={sessionId}
+        expense={renamingExpense}
         onUpdate={() => {
           fetchData();
           onUpdate();

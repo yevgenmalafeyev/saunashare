@@ -8,4 +8,4 @@ export { SwipeableRow } from './SwipeableRow';
 export { FloatingButton } from './FloatingButton';
 export { CreateNewButton } from './CreateNewButton';
 export { ModeToggle } from './ModeToggle';
-export { CheckIcon, CheckCircleIcon, PlusIcon, CloseIcon, CopyIcon } from './Icons';
+export { CheckIcon, CheckCircleIcon, PlusIcon, CloseIcon, CopyIcon, ArrowLeftIcon } from './Icons';

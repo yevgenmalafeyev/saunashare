@@ -85,7 +85,7 @@
   },
   "user": {
     "welcome": "Ласкаво просимо до Banha de Ioga",
-    "noActiveSessions": "Немає активних сесій",
+    "noActiveSessions": "Сьогодні немає відкритих сесій",
     "waitForSession": "Зачекайте поки створять сесію",
     "checkingIn": "Реєстрація як",
     "checkedInAs": "Ви зареєстровані як {{name}}",

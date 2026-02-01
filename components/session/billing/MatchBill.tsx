@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui';
+import { Button, CloseIcon } from '@/components/ui';
 import { ImageUploader } from './ImageUploader';
 import type { ExtractedExpense } from '@/lib/types';
 import { JSON_HEADERS } from '@/lib/constants';
@@ -82,6 +82,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
       ) : (
         <>
           <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`data:image/jpeg;base64,${imageData}`}
               alt="Bill"
@@ -91,9 +92,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
               onClick={handleReset}
               className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <CloseIcon className="w-5 h-5" />
             </button>
           </div>
 

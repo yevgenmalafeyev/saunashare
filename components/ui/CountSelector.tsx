@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ArrowLeftIcon } from './Icons';
 
 interface CountSelectorProps {
   options: readonly number[];
@@ -35,9 +36,7 @@ export function CountSelector({ options, value, onChange, size = 'md', extendedM
           }}
           className={`${smallBtnClasses} rounded-lg font-medium transition-all bg-stone-100 text-stone-600 hover:bg-stone-200 flex items-center justify-center`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeftIcon className="w-4 h-4" />
         </button>
         <button
           onClick={() => onChange(Math.max(5, value - 1))}

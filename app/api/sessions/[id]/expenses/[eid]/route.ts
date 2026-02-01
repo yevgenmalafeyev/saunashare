@@ -13,7 +13,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   const body = await request.json();
 
   // Validate expense fields if provided
-  if ('itemCount' in body || 'totalCost' in body) {
+  if ('name' in body || 'itemCount' in body || 'totalCost' in body) {
     const validated = validateAndRespond(validateUpdateExpense, body);
     if (validated.error) return validated.error;
 

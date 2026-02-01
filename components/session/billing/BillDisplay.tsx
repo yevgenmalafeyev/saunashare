@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeftIcon, CheckCircleIcon } from '@/components/ui';
 import type { ParticipantBill } from '@/lib/types';
 
 interface BillWithPayment extends ParticipantBill {
@@ -123,9 +124,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
           onClick={() => router.push(`/session/${sessionId}?tab=billing&mode=issue`)}
           className="absolute bottom-6 right-6 w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
         >
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-          </svg>
+          <ArrowLeftIcon className="w-6 h-6 text-white" />
         </button>
       </div>
     );
@@ -144,9 +143,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
   // Determine grid columns based on participant count
   const getGridCols = () => {
     if (totalCards <= 4) return 'grid-cols-2';
-    if (totalCards <= 6) return 'grid-cols-3';
     if (totalCards <= 9) return 'grid-cols-3';
-    if (totalCards <= 12) return 'grid-cols-4';
     if (totalCards <= 16) return 'grid-cols-4';
     return 'grid-cols-5';
   };
@@ -215,9 +212,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
               }`} style={{ fontSize: `${1.1 * scale}rem` }}>
                 {bill.participantName}
                 {bill.hasPaid && (
-                  <svg className="w-4 h-4 text-green-300" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
+                  <CheckCircleIcon className="w-4 h-4 text-green-300" />
                 )}
               </div>
             </div>
