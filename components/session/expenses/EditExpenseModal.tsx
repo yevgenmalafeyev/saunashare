@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, Input, Button } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
 
 interface EditExpenseModalProps {
@@ -19,6 +20,7 @@ export function EditExpenseModal({
   expense,
   onUpdate,
 }: EditExpenseModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -54,25 +56,25 @@ export function EditExpenseModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Edit Expense">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('session.editExpense')}>
       <div className="space-y-4">
         <Input
-          label="Expense Name"
+          label={t('session.expenseName')}
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Enter expense name"
+          placeholder={t('session.enterExpenseName')}
           autoFocus
         />
         <div className="flex gap-2">
           <Button variant="secondary" className="flex-1" onClick={handleClose}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             className="flex-1"
             onClick={handleSave}
             disabled={!name.trim() || name.trim() === expense?.name || isSaving}
           >
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? t('common.saving') : t('common.save')}
           </Button>
         </div>
       </div>

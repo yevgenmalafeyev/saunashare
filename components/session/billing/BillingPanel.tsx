@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { RequestBill } from './RequestBill';
 import { MatchBill } from './MatchBill';
 import { IssueBill } from './IssueBill';
+import { useTranslation } from '@/lib/context/I18nContext';
 
 interface BillingPanelProps {
   sessionId: number;
@@ -14,6 +15,7 @@ interface BillingPanelProps {
 type BillingMode = 'request' | 'match' | 'issue';
 
 export function BillingPanel({ sessionId, onUpdate, initialMode = 'request' }: BillingPanelProps) {
+  const { t } = useTranslation();
   const [mode, setModeState] = useState<BillingMode>(initialMode);
 
   const setMode = (newMode: BillingMode) => {
@@ -24,9 +26,9 @@ export function BillingPanel({ sessionId, onUpdate, initialMode = 'request' }: B
   };
 
   const modes = [
-    { id: 'request', label: 'Request', icon: '📝' },
-    { id: 'match', label: 'Match', icon: '📷' },
-    { id: 'issue', label: 'Issue', icon: '💰' },
+    { id: 'request', label: t('billing.request'), icon: '📝' },
+    { id: 'match', label: t('billing.match'), icon: '📷' },
+    { id: 'issue', label: t('billing.issue'), icon: '💰' },
   ] as const;
 
   return (

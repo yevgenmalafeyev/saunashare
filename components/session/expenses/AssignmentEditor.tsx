@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, CheckIcon } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { useDraggablePosition } from '@/lib/hooks';
 import type { SessionParticipant, Expense } from '@/lib/types';
 import { SHARE_OPTIONS, JSON_HEADERS } from '@/lib/constants';
@@ -23,6 +24,7 @@ export function AssignmentEditor({
   sessionId,
   onUpdate,
 }: AssignmentEditorProps) {
+  const { t } = useTranslation();
   const [assignments, setAssignments] = useState<Map<number, number>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
 
@@ -88,12 +90,12 @@ export function AssignmentEditor({
   if (!expense) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Assign: ${expense.name}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={t('session.assign', { name: expense.name })}>
       <div className="space-y-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-stone-500">Total shares: <span className="font-medium text-amber-600">{totalShares}</span></span>
+          <span className="text-stone-500">{t('session.totalShares')} <span className="font-medium text-amber-600">{totalShares}</span></span>
           <Button size="sm" variant="ghost" onClick={handleAssignAll}>
-            Assign to all
+            {t('session.assignToAll')}
           </Button>
         </div>
 
@@ -110,7 +112,7 @@ export function AssignmentEditor({
                   {participant.name}
                   {participant.personCount > 1 && (
                     <span className="text-stone-400 font-normal ml-1">
-                      ({participant.personCount} people)
+                      ({participant.personCount} {t('common.people')})
                     </span>
                   )}
                 </div>
@@ -157,9 +159,7 @@ export function AssignmentEditor({
         {isLoading ? (
           <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
         ) : (
-          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
+          <CheckIcon className="w-7 h-7" />
         )}
       </button>
     </Modal>

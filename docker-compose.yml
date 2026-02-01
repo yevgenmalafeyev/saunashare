@@ -1,0 +1,14 @@
+services:
+  banha:
+    build: .
+    ports:
+      - "0.0.0.0:3030:3030"
+    environment:
+      - NODE_ENV=production
+      - CLAUDE_CONFIG_DIR=/home/nextjs/.claude
+    volumes:
+      # Persist SQLite database
+      - ./data:/app/data
+      # Claude credentials (with explicit config dir)
+      - ./.claude-docker:/home/nextjs/.claude
+    restart: unless-stopped

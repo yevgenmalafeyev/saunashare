@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Input, Button, CountSelector } from '@/components/ui';
+import { Modal, Input, Button, CountSelector, Spinner } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS, ITEM_COUNT_OPTIONS } from '@/lib/constants';
 import type { ExpenseTemplate } from '@/lib/types';
@@ -88,9 +88,7 @@ export function AddUserExpenseModal({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('user.addExpense')}>
       {isLoading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500 border-t-transparent" />
-        </div>
+        <Spinner />
       ) : showCustom ? (
         <div className="space-y-4">
           <Input
@@ -107,7 +105,7 @@ export function AddUserExpenseModal({
             <CountSelector
               value={itemCount}
               onChange={setItemCount}
-              options={[...ITEM_COUNT_OPTIONS]}
+              options={ITEM_COUNT_OPTIONS}
               extendedMode
             />
           </div>

@@ -3,7 +3,7 @@
 import { SessionList } from '@/components/dashboard/SessionList';
 import { CreateSessionButton } from '@/components/dashboard/CreateSessionButton';
 import { UserDashboard } from '@/components/user';
-import { ModeToggle } from '@/components/ui';
+import { ModeToggle, LanguageSwitcher } from '@/components/ui';
 import { useAuth } from '@/lib/context/AuthContext';
 import { useTranslation } from '@/lib/context/I18nContext';
 
@@ -22,7 +22,8 @@ export default function DashboardPage() {
               <h1 className="text-2xl font-bold text-stone-800">{t('dashboard.title')}</h1>
               <p className="text-stone-500 text-sm">{t('dashboard.subtitle')}</p>
             </div>
-            <ModeToggle />
+            {/* Show ModeToggle for admins, LanguageSwitcher for users */}
+            {role === 'admin' ? <ModeToggle /> : <LanguageSwitcher />}
           </div>
         </div>
       </header>

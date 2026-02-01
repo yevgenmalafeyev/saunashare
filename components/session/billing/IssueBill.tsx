@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Spinner, Button, CheckCircleIcon } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
 import type { ParticipantBill } from '@/lib/types';
 
@@ -31,6 +32,7 @@ interface IssueBillProps {
 }
 
 export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<BillingStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [costs, setCosts] = useState<Record<number, string>>({});
@@ -103,7 +105,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
   if (!status) {
     return (
       <div className="text-center py-8 text-stone-500">
-        Failed to load billing information.
+        {t('billing.failedToLoad')}
       </div>
     );
   }
@@ -112,7 +114,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
     return (
       <div className="space-y-4">
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-          <div className="font-medium text-amber-800 mb-2">Cannot Issue Bill Yet</div>
+          <div className="font-medium text-amber-800 mb-2">{t('billing.notReady')}</div>
           <ul className="list-disc list-inside text-amber-700 space-y-1">
             {status.issues.map((issue, idx) => (
               <li key={idx}>{issue}</li>
@@ -123,7 +125,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
         {/* Manual cost entry for missing expenses */}
         {status.missingCostExpenses.length > 0 && (
           <div className="bg-white border border-stone-200 rounded-xl p-4 space-y-3">
-            <div className="font-medium text-stone-700">Enter costs manually:</div>
+            <div className="font-medium text-stone-700">{t('billing.enterCostsManually')}</div>
             {status.missingCostExpenses.map((expense) => (
               <div key={expense.id} className="flex items-center gap-3">
                 <div className="flex-1 text-stone-600">
@@ -148,7 +150,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
               disabled={!hasValidCosts || isSaving}
               className="w-full mt-2"
             >
-              {isSaving ? 'Saving...' : 'Apply'}
+              {isSaving ? t('common.saving') : t('common.save')}
             </Button>
           </div>
         )}
@@ -204,7 +206,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
           >
             <div className="flex items-center justify-between">
               <div className={`font-bold text-lg ${status.balance > 0 ? 'text-green-800' : 'text-red-800'}`}>
-                Общак
+                {t('billing.commonFund')}
               </div>
               <div className={`text-xl font-bold ${status.balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {status.balance > 0 ? '+' : ''}{status.balance} €
@@ -215,7 +217,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
       </div>
 
       <div className="bg-amber-100 border border-amber-300 rounded-xl p-4 flex items-center justify-between">
-        <span className="font-bold text-amber-800">Grand Total</span>
+        <span className="font-bold text-amber-800">{t('billing.grandTotal')}</span>
         <span className="text-2xl font-bold text-amber-800">{status.grandTotal} €</span>
       </div>
     </div>

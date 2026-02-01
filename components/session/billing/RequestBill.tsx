@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button, Spinner, CheckIcon, CopyIcon } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { FEEDBACK_TIMEOUT_MS } from '@/lib/constants';
 
 interface RequestBillProps {
@@ -19,7 +20,7 @@ const SMS_CONTACTS: SmsContact[] = [
   { phone: '+351963383623', name: 'Andrey', key: 'andrey' },
 ];
 
-function SmsLink({ phone, name, body }: SmsContact & { body: string }) {
+function SmsLink({ phone, body, label }: Omit<SmsContact, 'name' | 'key'> & { body: string; label: string }) {
   return (
     <a
       href={`sms:${phone}?&body=${encodeURIComponent(body)}`}
@@ -28,28 +29,17 @@ function SmsLink({ phone, name, body }: SmsContact & { body: string }) {
       <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
-      Text {name}
+      {label}
     </a>
   );
 }
 
 async function copyToClipboard(text: string): Promise<void> {
-  if (navigator.clipboard) {
-    await navigator.clipboard.writeText(text);
-  } else {
-    // Fallback for older browsers
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-  }
+  await navigator.clipboard.writeText(text);
 }
 
 export function RequestBill({ sessionId }: RequestBillProps) {
+  const { t } = useTranslation();
   const [billText, setBillText] = useState('');
   const [dutyPerson, setDutyPerson] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,12 +82,12 @@ export function RequestBill({ sessionId }: RequestBillProps) {
         {copied ? (
           <>
             <CheckIcon className="w-5 h-5 mr-2 inline" />
-            Copied!
+            {t('billing.copied')}
           </>
         ) : (
           <>
             <CopyIcon className="w-5 h-5 mr-2 inline" />
-            Copy to Clipboard
+            {t('billing.copyToClipboard')}
           </>
         )}
       </Button>
@@ -105,11 +95,16 @@ export function RequestBill({ sessionId }: RequestBillProps) {
       {SMS_CONTACTS
         .filter((contact) => !dutyPerson || contact.key === dutyPerson)
         .map((contact) => (
-          <SmsLink key={contact.phone} phone={contact.phone} name={contact.name} body={billText} />
+          <SmsLink
+            key={contact.phone}
+            phone={contact.phone}
+            body={billText}
+            label={t('billing.textPerson', { name: contact.name })}
+          />
         ))}
 
       <p className="text-sm text-stone-500 text-center">
-        Show this text to the sauna staff to get your bill
+        {t('billing.showBillText')}
       </p>
     </div>
   );

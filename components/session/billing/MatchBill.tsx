@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, CloseIcon } from '@/components/ui';
+import { Button, CloseIcon, CheckIcon, LoadingSpinnerIcon } from '@/components/ui';
 import { ImageUploader } from './ImageUploader';
+import { useTranslation } from '@/lib/context/I18nContext';
 import type { ExtractedExpense } from '@/lib/types';
 import { JSON_HEADERS } from '@/lib/constants';
 
@@ -13,6 +14,7 @@ interface MatchBillProps {
 }
 
 export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
+  const { t } = useTranslation();
   const [imageData, setImageData] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<{
@@ -43,7 +45,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
       const data = await res.json();
       setResult(data);
     } catch {
-      setResult({ success: false, error: 'Failed to process image' });
+      setResult({ success: false, error: t('billing.failedToProcess') });
     } finally {
       setIsProcessing(false);
     }
@@ -105,11 +107,11 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
             >
               {isProcessing ? (
                 <>
-                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2 inline-block" />
-                  Processing with Claude...
+                  <LoadingSpinnerIcon className="w-5 h-5 mr-2 inline-block" />
+                  {t('billing.processingWithClaude')}
                 </>
               ) : (
-                'Extract Costs'
+                t('billing.extractCosts')
               )}
             </Button>
           )}
@@ -119,7 +121,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
               {result.success ? (
                 <>
                   <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                    <div className="font-medium text-green-800 mb-2">Extracted Costs</div>
+                    <div className="font-medium text-green-800 mb-2">{t('billing.extractedCosts')}</div>
                     <div className="space-y-2">
                       {result.expenses?.map((expense, idx) => (
                         <div key={idx} className="flex justify-between text-stone-700">
@@ -128,7 +130,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
                         </div>
                       ))}
                       <div className="pt-2 border-t border-green-200 flex justify-between font-bold text-green-800">
-                        <span>Total</span>
+                        <span>{t('billing.total')}</span>
                         <span>{result.total} €</span>
                       </div>
                     </div>
@@ -136,20 +138,18 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
 
                   {applied ? (
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center text-amber-800">
-                      <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Costs applied to expenses!
+                      <CheckIcon className="w-8 h-8 mx-auto mb-2" />
+                      {t('billing.costsApplied')}
                     </div>
                   ) : (
                     <Button className="w-full" size="lg" onClick={handleApply}>
-                      Apply Costs to Expenses
+                      {t('billing.applyCostsToExpenses')}
                     </Button>
                   )}
                 </>
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                  <div className="font-medium text-red-800 mb-1">Error</div>
+                  <div className="font-medium text-red-800 mb-1">{t('common.error')}</div>
                   <p className="text-red-700">{result.error}</p>
                 </div>
               )}

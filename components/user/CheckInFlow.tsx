@@ -129,7 +129,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
             <CountSelector
               value={personCount}
               onChange={setPersonCount}
-              options={[...PERSON_COUNT_OPTIONS]}
+              options={PERSON_COUNT_OPTIONS}
             />
           </div>
           <div className="flex gap-2">
@@ -165,7 +165,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
             <CountSelector
               value={personCount}
               onChange={setPersonCount}
-              options={[...PERSON_COUNT_OPTIONS]}
+              options={PERSON_COUNT_OPTIONS}
             />
           </div>
           <div className="flex gap-2">

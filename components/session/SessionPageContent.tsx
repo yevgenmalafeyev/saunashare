@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { SessionTabs } from './SessionTabs';
 import { UserSessionView } from '@/components/user';
-import { ArrowLeftIcon } from '@/components/ui';
+import { ArrowLeftIcon, LanguageSwitcher } from '@/components/ui';
 import { useAuth } from '@/lib/context/AuthContext';
 
 interface SessionPageContentProps {
@@ -29,6 +29,7 @@ export function SessionPageContent({ sessionId, sessionName }: SessionPageConten
           <div className="flex-1">
             <h1 className="text-xl font-bold text-stone-800">{sessionName}</h1>
           </div>
+          <LanguageSwitcher />
         </div>
       </header>
 

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Spinner, CountSelector, SwipeableRow, PlusIcon } from '@/components/ui';
+import { Spinner, CountSelector, SwipeableRow, PlusIcon, UsersIcon } from '@/components/ui';
 import { AddExpenseModal } from './AddExpenseModal';
 import { AssignmentEditor } from './AssignmentEditor';
 import { EditExpenseModal } from './EditExpenseModal';
+import { useTranslation } from '@/lib/context/I18nContext';
 import type { SessionParticipant, Expense } from '@/lib/types';
 import { ITEM_COUNT_OPTIONS, JSON_HEADERS, DEFAULT_EXPENSE_NAME } from '@/lib/constants';
 
@@ -14,6 +15,7 @@ interface ExpenseListProps {
 }
 
 export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
+  const { t } = useTranslation();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,13 +76,15 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
   return (
     <div className="space-y-4">
       <div className="text-lg font-medium text-stone-700">
-        {expenses.length} expense{expenses.length !== 1 ? 's' : ''}
+        {expenses.length === 1
+          ? t('session.expenseCountSingular', { count: expenses.length })
+          : t('session.expenseCountPlural', { count: expenses.length })}
       </div>
 
       {expenses.length === 0 ? (
         <div className="space-y-4">
           <div className="text-center py-8 text-stone-500">
-            No expenses yet. Add an expense to get started.
+            {t('session.noExpensesDesc')}
           </div>
           <div className="flex justify-end">
             <button
@@ -107,11 +111,11 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
               <SwipeableRow
                 key={expense.id}
                 onAction={() => handleDelete(expense.id)}
-                actionLabel="Delete"
+                actionLabel={t('common.delete')}
                 actionColor="red"
                 leftAction={!isDefaultExpense ? {
                   onAction: () => setRenamingExpense(expense),
-                  label: 'Edit',
+                  label: t('common.edit'),
                   color: 'amber',
                 } : undefined}
               >
@@ -140,9 +144,7 @@ export function ExpenseList({ sessionId, onUpdate }: ExpenseListProps) {
                           onClick={() => setEditingExpense(expense)}
                           className="relative p-2 -mr-2 text-stone-500 hover:bg-stone-100 rounded-lg transition-colors"
                         >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                          </svg>
+                          <UsersIcon className="w-5 h-5" />
                           {unassigned > 0 && (
                             <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-red-500 text-white text-xs font-bold rounded-full px-1">
                               {unassigned}

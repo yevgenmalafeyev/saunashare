@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, CheckCircleIcon } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import type { ParticipantBill } from '@/lib/types';
 
 interface BillWithPayment extends ParticipantBill {
@@ -20,13 +21,14 @@ interface BillDisplayProps {
 
 const POLL_INTERVAL_MS = 15000; // 15 seconds
 
-export function BillDisplay({ bills: initialBills, sessionName, sessionId, balance = 0, expenseTotal }: BillDisplayProps) {
+export function BillDisplay({ bills: initialBills, grandTotal, sessionName, sessionId, balance = 0 }: BillDisplayProps) {
   const [isLandscape, setIsLandscape] = useState<boolean | null>(null);
   const [scale, setScale] = useState(1);
   const [bills, setBills] = useState<BillWithPayment[]>(initialBills);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { t } = useTranslation();
 
   // Poll for payment status updates
   const fetchPaymentStatus = useCallback(async () => {
@@ -116,7 +118,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
           style={{ transform: 'rotate(90deg)' }}
         >
           <div className="text-6xl mb-4">📱</div>
-          <div className="text-3xl font-bold">Rotate to landscape</div>
+          <div className="text-3xl font-bold">{t('tv.rotateLandscape')}</div>
         </div>
 
         {/* Exit button - bottom right in portrait view */}
@@ -130,8 +132,8 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
     );
   }
 
-  // Use expenseTotal if provided, otherwise calculate from bills
-  const displayTotal = expenseTotal ?? bills.reduce((sum, b) => sum + b.total, 0);
+  // Use grandTotal (what's actually collected from participants, including Общак rounding)
+  const displayTotal = grandTotal;
 
   // Calculate total cards
   const totalCards = bills.length + (balance !== 0 ? 1 : 0) + (bills.length > 7 ? 1 : 0); // +1 for summary card when >7
@@ -159,7 +161,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
     return [...breakdown].sort((a, b) => {
       const isTimeA = isDefaultExpenseItem(a.expenseName);
       const isTimeB = isDefaultExpenseItem(b.expenseName);
-      return isTimeA === isTimeB ? 0 : isTimeA ? 1 : -1;
+      return isTimeA === isTimeB ? 0 : isTimeA ? -1 : 1;
     });
   };
 
@@ -248,7 +250,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
           >
             <div className="text-center mb-1">
               <div className={`font-bold ${balance > 0 ? 'text-green-200' : 'text-red-200'}`} style={{ fontSize: `${1.1 * scale}rem` }}>
-                Общак
+                {t('billing.commonFund')}
               </div>
             </div>
             <div className={`font-black text-center mb-1 ${balance > 0 ? 'text-green-300' : 'text-red-300'}`} style={{ fontSize: `${1.5 * scale}rem` }}>

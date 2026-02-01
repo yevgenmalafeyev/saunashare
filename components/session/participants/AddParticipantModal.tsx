@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Modal, Input, Button, CreateNewButton, CountSelector } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { PERSON_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
 import type { ParticipantSuggestion } from '@/lib/types';
 
@@ -20,6 +21,7 @@ export function AddParticipantModal({
   existingParticipantIds,
   onAdd,
 }: AddParticipantModalProps) {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<ParticipantSuggestion[]>([]);
   const [newName, setNewName] = useState('');
   const [personCount, setPersonCount] = useState(1);
@@ -83,12 +85,12 @@ export function AddParticipantModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Participant">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('session.addParticipant')}>
       {!isCreatingNew ? (
         <div className="space-y-4">
           {availableSuggestions.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm text-stone-500">Select from previous participants:</p>
+              <p className="text-sm text-stone-500">{t('session.selectFromPrevious')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {availableSuggestions.map((participant) => (
                   <button
@@ -112,23 +114,23 @@ export function AddParticipantModal({
           )}
 
           <CreateNewButton
-            label="Create New Participant"
+            label={t('session.createNewParticipant')}
             onClick={() => setIsCreatingNew(true)}
           />
         </div>
       ) : (
         <div className="space-y-4">
           <Input
-            label="Name"
+            label={t('common.name')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Enter name"
+            placeholder={t('session.enterName')}
             autoFocus
           />
 
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-2">
-              Number of People
+              {t('session.numberOfPeople')}
             </label>
             <CountSelector
               options={PERSON_COUNT_OPTIONS}
@@ -143,14 +145,14 @@ export function AddParticipantModal({
               className="flex-1"
               onClick={() => setIsCreatingNew(false)}
             >
-              Back
+              {t('common.back')}
             </Button>
             <Button
               className="flex-1"
               onClick={handleCreateNew}
               disabled={!newName.trim() || isLoading}
             >
-              {isLoading ? 'Adding...' : 'Add'}
+              {isLoading ? t('common.adding') : t('common.add')}
             </Button>
           </div>
         </div>

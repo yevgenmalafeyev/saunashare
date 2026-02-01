@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { SessionCard } from './SessionCard';
 import { SwipeableRow, Spinner, Button } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
 
 interface Session {
@@ -14,6 +15,7 @@ interface Session {
 }
 
 export function SessionList() {
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [hiddenCount, setHiddenCount] = useState(0);
   const [showHidden, setShowHidden] = useState(false);
@@ -66,8 +68,8 @@ export function SessionList() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
           </svg>
         </div>
-        <h3 className="text-xl font-semibold text-stone-700 mb-2">No sessions yet</h3>
-        <p className="text-stone-500">Tap the + button to create your first sauna session</p>
+        <h3 className="text-xl font-semibold text-stone-700 mb-2">{t('dashboard.noSessions')}</h3>
+        <p className="text-stone-500">{t('dashboard.noSessionsDesc')}</p>
       </div>
     );
   }
@@ -79,7 +81,7 @@ export function SessionList() {
         <SwipeableRow
           key={session.id}
           onAction={() => handleToggleHidden(session.id, true)}
-          actionLabel="Hide"
+          actionLabel={t('common.hide')}
           actionColor="amber"
         >
           <SessionCard
@@ -98,7 +100,9 @@ export function SessionList() {
           className="w-full"
           onClick={() => setShowHidden(true)}
         >
-          Show {hiddenCount} hidden session{hiddenCount !== 1 ? 's' : ''}
+          {hiddenCount === 1
+            ? t('dashboard.showHidden', { count: hiddenCount })
+            : t('dashboard.showHiddenPlural', { count: hiddenCount })}
         </Button>
       )}
 
@@ -107,7 +111,7 @@ export function SessionList() {
         <>
           <div className="flex items-center gap-2 pt-4">
             <div className="flex-1 h-px bg-stone-300" />
-            <span className="text-sm text-stone-500">Hidden sessions</span>
+            <span className="text-sm text-stone-500">{t('dashboard.hiddenSessions')}</span>
             <div className="flex-1 h-px bg-stone-300" />
           </div>
 
@@ -115,7 +119,7 @@ export function SessionList() {
             <SwipeableRow
               key={session.id}
               onAction={() => handleToggleHidden(session.id, false)}
-              actionLabel="Unhide"
+              actionLabel={t('common.unhide')}
               actionColor="amber"
             >
               <div className="opacity-60">
@@ -134,7 +138,7 @@ export function SessionList() {
             className="w-full"
             onClick={() => setShowHidden(false)}
           >
-            Hide hidden sessions
+            {t('dashboard.hideHidden')}
           </Button>
         </>
       )}

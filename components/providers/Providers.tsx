@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { AuthProvider, type UserRole } from '@/lib/context/AuthContext';
 import { I18nProvider } from '@/lib/context/I18nContext';
 import { InstallBanner } from '@/components/pwa/InstallBanner';
+import { ConnectionStatus } from '@/components/pwa/ConnectionStatus';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -39,6 +40,7 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <I18nProvider>
       <AuthProvider initialRole={role}>
+        <ConnectionStatus />
         <InstallBanner />
         {children}
       </AuthProvider>

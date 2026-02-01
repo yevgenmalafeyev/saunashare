@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, Input, Button, CreateNewButton } from '@/components/ui';
+import { Modal, Input, Button, CreateNewButton, ArrowLeftIcon } from '@/components/ui';
+import { useTranslation } from '@/lib/context/I18nContext';
 import { ITEM_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
 import type { ExpenseTemplate } from '@/lib/types';
 
@@ -20,6 +21,7 @@ export function AddExpenseModal({
   onAdd,
   existingExpenseNames,
 }: AddExpenseModalProps) {
+  const { t } = useTranslation();
   const [templates, setTemplates] = useState<ExpenseTemplate[]>([]);
   const [addedNames, setAddedNames] = useState<string[]>([]);
   const [newName, setNewName] = useState('');
@@ -90,12 +92,12 @@ export function AddExpenseModal({
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add Expense">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('session.addExpense')}>
       {!isCreatingNew ? (
         <div className="space-y-4">
           {availableTemplates.length > 0 && (
             <div className="space-y-2">
-              <p className="text-sm text-stone-500">Select from templates:</p>
+              <p className="text-sm text-stone-500">{t('session.selectFromTemplates')}</p>
               <div className="space-y-2">
                 {availableTemplates.map((template) => (
                   <div
@@ -105,7 +107,7 @@ export function AddExpenseModal({
                     <div className="flex-1 pl-2">
                       <div className="font-medium text-stone-800">{template.name}</div>
                       {template.isSystem && (
-                        <span className="text-xs text-stone-400">System template</span>
+                        <span className="text-xs text-stone-400">{t('session.systemTemplate')}</span>
                       )}
                     </div>
                     <div className="flex gap-1">
@@ -127,23 +129,23 @@ export function AddExpenseModal({
           )}
 
           <CreateNewButton
-            label="Create New Expense"
+            label={t('session.createNewExpense')}
             onClick={() => setIsCreatingNew(true)}
           />
         </div>
       ) : (
         <div className="space-y-4">
           <Input
-            label="Expense Name"
+            label={t('session.expenseName')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="e.g., Beer"
+            placeholder={t('session.expensePlaceholder')}
             autoFocus
           />
 
           <div>
             <label className="block text-sm font-medium text-stone-700 mb-2">
-              Count
+              {t('common.count')}
             </label>
             {!isExtendedCount ? (
               <div className="flex gap-2">
@@ -183,9 +185,7 @@ export function AddExpenseModal({
                   }}
                   className="w-12 h-12 flex items-center justify-center bg-stone-100 text-stone-600 hover:bg-stone-200 rounded-xl font-medium transition-all"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                  <ArrowLeftIcon className="w-5 h-5" />
                 </button>
                 <div className="flex-1 flex items-center justify-center gap-3">
                   <button
@@ -214,14 +214,14 @@ export function AddExpenseModal({
               className="flex-1"
               onClick={() => setIsCreatingNew(false)}
             >
-              Back
+              {t('common.back')}
             </Button>
             <Button
               className="flex-1"
               onClick={handleCreateNew}
               disabled={!newName.trim() || isLoading}
             >
-              {isLoading ? 'Adding...' : 'Add'}
+              {isLoading ? t('common.adding') : t('common.add')}
             </Button>
           </div>
         </div>

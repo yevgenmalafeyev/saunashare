@@ -36,22 +36,6 @@ export async function fetchAPI<T>(
 }
 
 /**
- * Simple POST helper
- */
-export async function postAPI<T>(url: string, body: unknown): Promise<T | null> {
-  const result = await fetchAPI<T>(url, { method: 'POST', body });
-  return result.ok ? result.data : null;
-}
-
-/**
- * Simple PATCH helper
- */
-export async function patchAPI<T>(url: string, body: unknown): Promise<T | null> {
-  const result = await fetchAPI<T>(url, { method: 'PATCH', body });
-  return result.ok ? result.data : null;
-}
-
-/**
  * Simple DELETE helper
  */
 export async function deleteAPI(url: string): Promise<boolean> {

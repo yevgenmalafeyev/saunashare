@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Spinner, CountSelector, SwipeableRow, FloatingButton, CheckCircleIcon } from '@/components/ui';
 import { AddParticipantModal } from './AddParticipantModal';
+import { useTranslation } from '@/lib/context/I18nContext';
 import type { SessionParticipant } from '@/lib/types';
 import { PERSON_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
 
@@ -13,6 +14,7 @@ interface ParticipantListProps {
 }
 
 export function ParticipantList({ sessionId, onUpdate, billingReady = false }: ParticipantListProps) {
+  const { t } = useTranslation();
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -80,12 +82,12 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
   return (
     <div className="space-y-4">
       <div className="text-lg font-medium text-stone-700">
-        Total: <span className="text-amber-700">{totalPeople} people</span>
+        {t('common.total')}: <span className="text-amber-700">{totalPeople} {t('common.people')}</span>
       </div>
 
       {participants.length === 0 ? (
         <div className="text-center py-8 text-stone-500">
-          No participants yet. Add someone to get started.
+          {t('session.noParticipantsDesc')}
         </div>
       ) : (
         <div className="space-y-3">
@@ -93,11 +95,11 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
             <SwipeableRow
               key={participant.id}
               onAction={() => handleRemove(participant.id)}
-              actionLabel="Remove"
+              actionLabel={t('common.remove')}
               actionColor="red"
               leftAction={billingReady ? {
                 onAction: () => handleTogglePaid(participant.id, participant.hasPaid ?? false),
-                label: participant.hasPaid ? 'Mark unpaid' : 'Mark paid',
+                label: participant.hasPaid ? t('session.markUnpaid') : t('session.markPaid'),
                 color: participant.hasPaid ? 'amber' : 'green',
               } : undefined}
             >
@@ -106,7 +108,7 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
                   <div className="font-medium text-stone-800 flex items-center gap-2">
                     {participant.name}
                     {participant.hasPaid && (
-                      <span className="text-green-500" title="Paid">
+                      <span className="text-green-500" title={t('session.markPaid')}>
                         <CheckCircleIcon />
                       </span>
                     )}
