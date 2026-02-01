@@ -6,10 +6,6 @@ import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
 import type { ParticipantBill } from '@/lib/types';
 
-interface ParticipantBillWithPayment extends ParticipantBill {
-  hasPaid?: boolean;
-}
-
 interface MissingCostExpense {
   id: number;
   name: string;
@@ -19,7 +15,7 @@ interface MissingCostExpense {
 interface BillingStatus {
   ready: boolean;
   issues: string[];
-  bills: ParticipantBillWithPayment[];
+  bills: ParticipantBill[];
   grandTotal: number;
   expenseTotal: number;
   balance: number;
@@ -195,30 +191,38 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
           </div>
         ))}
 
-        {/* Общак - rounding balance styled like a participant */}
-        {status.balance !== 0 && (
-          <div
-            className={`rounded-xl p-4 ${
-              status.balance > 0
-                ? 'bg-green-50 border border-green-200'
-                : 'bg-red-50 border border-red-200'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <div className={`font-bold text-lg ${status.balance > 0 ? 'text-green-800' : 'text-red-800'}`}>
-                {t('billing.commonFund')}
-              </div>
-              <div className={`text-xl font-bold ${status.balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {status.balance > 0 ? '+' : ''}{status.balance} €
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      <div className="bg-amber-100 border border-amber-300 rounded-xl p-4 flex items-center justify-between">
-        <span className="font-bold text-amber-800">{t('billing.grandTotal')}</span>
-        <span className="text-2xl font-bold text-amber-800">{status.grandTotal} €</span>
+      {/* Summary section showing the breakdown */}
+      <div className="bg-stone-100 border border-stone-200 rounded-xl p-4 space-y-2">
+        {/* Grand Total (expense cost - what the sauna charges) */}
+        <div className="flex items-center justify-between">
+          <span className="font-bold text-amber-800">{t('billing.grandTotal')}</span>
+          <span className="text-xl font-bold text-amber-800">{status.expenseTotal} €</span>
+        </div>
+
+        {/* Общак - rounding balance */}
+        {status.balance !== 0 && (
+          <>
+            <div className="flex items-center justify-between">
+              <span className={status.balance > 0 ? 'text-green-700' : 'text-red-700'}>
+                {t('billing.commonFund')}
+              </span>
+              <span className={`font-medium ${status.balance > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {status.balance > 0 ? '+' : ''}{status.balance} €
+              </span>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-stone-300 my-2" />
+
+            {/* To Collect (sum of participant bills) */}
+            <div className="flex items-center justify-between">
+              <span className="text-stone-600">{t('billing.toCollect')}</span>
+              <span className="font-medium text-stone-800">{status.grandTotal} €</span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

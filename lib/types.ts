@@ -34,12 +34,23 @@ export interface ParticipantBill {
   participantName: string;
   personCount: number;
   total: number;
+  hasPaid?: boolean;
   breakdown: {
     expenseId?: number;
     expenseName: string;
     share: number;
     cost: number;
   }[];
+}
+
+/** Session data as returned by the API */
+export interface Session {
+  id: number;
+  name: string;
+  hidden: boolean;
+  createdAt: string;
+  participantCount: number;
+  dutyPerson?: 'artur' | 'andrey' | null;
 }
 
 /** An expense extracted from a bill image via Claude */
@@ -63,4 +74,13 @@ export interface ParticipantSuggestion {
   name: string;
   activityScore: number;
   recentPersonCount: number;
+}
+
+/** A user's expense assignment with expense details (used in user expense list) */
+export interface UserExpenseAssignment {
+  expenseId: number;
+  expenseName: string;
+  itemCount: number;
+  share: number;
+  totalCost: number | null;
 }

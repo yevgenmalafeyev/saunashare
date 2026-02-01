@@ -2,22 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Spinner } from '@/components/ui';
+import { Spinner, Button } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { useAuth } from '@/lib/context/AuthContext';
 import { CheckInFlow } from './CheckInFlow';
-
-interface Session {
-  id: number;
-  name: string;
-  hidden: boolean;
-  createdAt: string;
-  participantCount: number;
-  dutyPerson?: 'artur' | 'andrey' | null;
-}
+import type { Session } from '@/lib/types';
 
 interface SessionWithCheckedIn extends Session {
   userSessionParticipantId?: number;
+  billingReady?: boolean;
 }
 
 export function UserDashboard() {
@@ -28,6 +21,7 @@ export function UserDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showBillIssuedError, setShowBillIssuedError] = useState(false);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -45,11 +39,18 @@ export function UserDashboard() {
           return sessionDate.getTime() === today.getTime() && !session.hidden;
         });
 
-        // Check if user is already checked in to any session
-        if (currentUserId) {
-          for (const session of todaySessions) {
-            const participantsRes = await fetch(`/api/sessions/${session.id}/participants`);
-            const participants = await participantsRes.json();
+        // Check billing status and if user is already checked in to any session
+        for (const session of todaySessions) {
+          const [participantsRes, billingRes] = await Promise.all([
+            fetch(`/api/sessions/${session.id}/participants`),
+            fetch(`/api/sessions/${session.id}/billing?type=calculate`),
+          ]);
+          const participants = await participantsRes.json();
+          const billingData = await billingRes.json();
+
+          session.billingReady = billingData.ready;
+
+          if (currentUserId) {
             const userParticipant = participants.find(
               (p: { id: number }) => p.id === currentUserId
             );
@@ -72,6 +73,9 @@ export function UserDashboard() {
     if (session.userSessionParticipantId) {
       // Already checked in, go to session view
       router.push(`/session/${session.id}`);
+    } else if (session.billingReady) {
+      // Bill already issued, cannot check in
+      setShowBillIssuedError(true);
     } else {
       // Show check-in flow
       setSelectedSession(session);
@@ -132,6 +136,24 @@ export function UserDashboard() {
           }}
           onCheckIn={handleCheckIn}
         />
+      )}
+
+      {/* Bill already issued error dialog */}
+      {showBillIssuedError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-xl">
+            <h3 className="text-2xl font-bold text-stone-800 mb-4">
+              {t('user.cannotCheckIn')}
+            </h3>
+            <p className="text-lg text-stone-600 mb-8">{t('user.billAlreadyIssued')}</p>
+            <Button
+              className="w-full py-4 text-lg"
+              onClick={() => setShowBillIssuedError(false)}
+            >
+              {t('common.close')}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

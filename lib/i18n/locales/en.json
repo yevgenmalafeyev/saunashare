@@ -105,6 +105,7 @@
     "noParticipants": "No participants in session",
     "enterCostsManually": "Enter costs manually:",
     "grandTotal": "Grand Total",
+    "toCollect": "To Collect",
     "commonFund": "Общак",
     "copyToClipboard": "Copy to Clipboard",
     "copyText": "Copy Text",
@@ -150,7 +151,9 @@
     "markedPaid": "Marked as Paid",
     "yourTotal": "Your Total",
     "billReady": "Bill is ready!",
-    "billIssued": "The bill is issued, to correct your expenses contact the administrator offline"
+    "billIssued": "The bill is issued, to correct your expenses contact the administrator offline",
+    "cannotCheckIn": "Cannot Check In",
+    "billAlreadyIssued": "The bill for this session has already been issued. You cannot check in after the bill is issued."
   },
   "pwa": {
     "installTitle": "Install Banha",

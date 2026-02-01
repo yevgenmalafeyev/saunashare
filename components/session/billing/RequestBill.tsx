@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Spinner, CheckIcon, CopyIcon } from '@/components/ui';
+import { Button, Spinner, CheckIcon, CopyIcon, MessageIcon } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { FEEDBACK_TIMEOUT_MS } from '@/lib/constants';
 
@@ -26,9 +26,7 @@ function SmsLink({ phone, body, label }: Omit<SmsContact, 'name' | 'key'> & { bo
       href={`sms:${phone}?&body=${encodeURIComponent(body)}`}
       className="w-full block text-center font-medium rounded-xl transition-all duration-200 active:scale-95 bg-stone-200 text-stone-800 hover:bg-stone-300 active:bg-stone-400 px-6 py-3 text-lg"
     >
-      <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-      </svg>
+      <MessageIcon className="w-5 h-5 mr-2 inline" />
       {label}
     </a>
   );

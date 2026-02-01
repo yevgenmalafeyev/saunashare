@@ -10,35 +10,7 @@ import { AddUserExpenseModal } from './AddUserExpenseModal';
 import { ContactButtons } from './ContactButtons';
 import { PaymentButton } from './PaymentButton';
 import { JSON_HEADERS, DEFAULT_EXPENSE_NAME } from '@/lib/constants';
-
-interface Session {
-  id: number;
-  name: string;
-  dutyPerson: 'artur' | 'andrey' | null;
-}
-
-interface ExpenseAssignment {
-  expenseId: number;
-  expenseName: string;
-  itemCount: number;
-  share: number;
-  totalCost: number | null;
-}
-
-interface ParticipantBill {
-  sessionParticipantId: number;
-  participantId: number;
-  participantName: string;
-  personCount: number;
-  total: number;
-  hasPaid?: boolean;
-  breakdown: Array<{
-    expenseId: number;
-    expenseName: string;
-    share: number;
-    cost: number;
-  }>;
-}
+import type { Session, ParticipantBill, UserExpenseAssignment } from '@/lib/types';
 
 interface SessionParticipantMeta {
   hasPaid: boolean;
@@ -57,7 +29,7 @@ export function UserSessionView({ sessionId }: UserSessionViewProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [participantName, setParticipantName] = useState<string>('');
   const [personCount, setPersonCount] = useState<number>(1);
-  const [assignments, setAssignments] = useState<ExpenseAssignment[]>([]);
+  const [assignments, setAssignments] = useState<UserExpenseAssignment[]>([]);
   const [meta, setMeta] = useState<SessionParticipantMeta | null>(null);
   const [billingStatus, setBillingStatus] = useState<{
     ready: boolean;
@@ -101,7 +73,7 @@ export function UserSessionView({ sessionId }: UserSessionViewProps) {
       }
 
       // Build assignments for current user
-      const userAssignments: ExpenseAssignment[] = [];
+      const userAssignments: UserExpenseAssignment[] = [];
       for (const expense of expensesData) {
         const assignment = expense.assignments?.find(
           (a: { sessionParticipantId: number }) => a.sessionParticipantId === currentUserId

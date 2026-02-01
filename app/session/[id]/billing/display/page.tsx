@@ -49,7 +49,6 @@ export default async function BillDisplayPage({ params }: DisplayPageProps) {
   return (
     <BillDisplay
       bills={billsWithPayment}
-      grandTotal={grandTotal}
       sessionName={session.name}
       sessionId={sessionId}
       balance={balance}

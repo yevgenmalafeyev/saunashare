@@ -6,13 +6,8 @@ import { ArrowLeftIcon, CheckCircleIcon } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import type { ParticipantBill } from '@/lib/types';
 
-interface BillWithPayment extends ParticipantBill {
-  hasPaid?: boolean;
-}
-
 interface BillDisplayProps {
-  bills: BillWithPayment[];
-  grandTotal: number;
+  bills: ParticipantBill[];
   sessionName: string;
   sessionId: number;
   balance?: number;
@@ -21,10 +16,10 @@ interface BillDisplayProps {
 
 const POLL_INTERVAL_MS = 15000; // 15 seconds
 
-export function BillDisplay({ bills: initialBills, grandTotal, sessionName, sessionId, balance = 0 }: BillDisplayProps) {
+export function BillDisplay({ bills: initialBills, sessionName, sessionId, balance = 0, expenseTotal = 0 }: BillDisplayProps) {
   const [isLandscape, setIsLandscape] = useState<boolean | null>(null);
   const [scale, setScale] = useState(1);
-  const [bills, setBills] = useState<BillWithPayment[]>(initialBills);
+  const [bills, setBills] = useState<ParticipantBill[]>(initialBills);
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -132,8 +127,8 @@ export function BillDisplay({ bills: initialBills, grandTotal, sessionName, sess
     );
   }
 
-  // Use grandTotal (what's actually collected from participants, including Общак rounding)
-  const displayTotal = grandTotal;
+  // Use expenseTotal (what the sauna charges) as the main display total
+  const displayTotal = expenseTotal;
 
   // Calculate total cards
   const totalCards = bills.length + (balance !== 0 ? 1 : 0) + (bills.length > 7 ? 1 : 0); // +1 for summary card when >7
@@ -188,9 +183,9 @@ export function BillDisplay({ bills: initialBills, grandTotal, sessionName, sess
           fontSize: `${scale}rem`,
         }}
       >
-        {/* Header card - only show in compact mode */}
+        {/* Header card - only show in non-compact mode */}
         {!compactMode && (
-          <div className="col-span-full flex items-center justify-center gap-3 mb-2">
+          <div className="col-span-full flex items-center justify-center gap-4 mb-2">
             <h1 className="text-2xl font-bold text-amber-200">
               {sessionName}
             </h1>

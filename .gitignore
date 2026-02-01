@@ -1,5 +1,19 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Database (contains user data)
+/data/
+
+# Claude credentials and settings (contains auth tokens)
+.claude-docker/
+.claude/settings.local.json
+
+# Production config (contains server-specific paths and URLs)
+docker-compose.prod.yml
+CLAUDE.md
+
+# Playwright MCP
+.playwright-mcp/
+
 # dependencies
 /node_modules
 /.pnp

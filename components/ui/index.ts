@@ -9,4 +9,4 @@ export { FloatingButton } from './FloatingButton';
 export { CreateNewButton } from './CreateNewButton';
 export { ModeToggle } from './ModeToggle';
 export { LanguageSwitcher } from './LanguageSwitcher';
-export { CheckIcon, CheckCircleIcon, PlusIcon, CloseIcon, CopyIcon, ArrowLeftIcon, UsersIcon, LoadingSpinnerIcon } from './Icons';
+export { CheckIcon, CheckCircleIcon, PlusIcon, CloseIcon, CopyIcon, ArrowLeftIcon, UsersIcon, LoadingSpinnerIcon, MessageIcon, PhoneIcon, ChevronRightIcon, UsersGroupIcon } from './Icons';

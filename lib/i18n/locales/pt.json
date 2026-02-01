@@ -105,6 +105,7 @@
     "noParticipants": "Não há participantes na sessão",
     "enterCostsManually": "Introduza os custos manualmente:",
     "grandTotal": "Total Geral",
+    "toCollect": "A Cobrar",
     "commonFund": "Общак",
     "copyToClipboard": "Copiar para área de transferência",
     "copyText": "Copiar Texto",
@@ -150,7 +151,9 @@
     "markedPaid": "Marcado como Pago",
     "yourTotal": "O Seu Total",
     "billReady": "A fatura está pronta!",
-    "billIssued": "A fatura foi emitida, para corrigir as suas despesas contacte o administrador offline"
+    "billIssued": "A fatura foi emitida, para corrigir as suas despesas contacte o administrador offline",
+    "cannotCheckIn": "Não é Possível Registar",
+    "billAlreadyIssued": "A fatura para esta sessão já foi emitida. Não pode registar-se depois de a fatura ser emitida."
   },
   "pwa": {
     "installTitle": "Instalar Banha",

@@ -3,19 +3,12 @@
 import { useTranslation } from '@/lib/context/I18nContext';
 import { SwipeableRow, CountSelector } from '@/components/ui';
 import { DEFAULT_EXPENSE_NAME, ITEM_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
-
-interface ExpenseAssignment {
-  expenseId: number;
-  expenseName: string;
-  itemCount: number;
-  share: number;
-  totalCost: number | null;
-}
+import type { UserExpenseAssignment } from '@/lib/types';
 
 interface UserExpenseListProps {
   sessionId: number;
   sessionParticipantId: number;
-  assignments: ExpenseAssignment[];
+  assignments: UserExpenseAssignment[];
   onUpdate?: () => void;
   canEdit?: boolean;
 }

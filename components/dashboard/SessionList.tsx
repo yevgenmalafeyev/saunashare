@@ -5,14 +5,7 @@ import { SessionCard } from './SessionCard';
 import { SwipeableRow, Spinner, Button } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
-
-interface Session {
-  id: number;
-  name: string;
-  hidden: boolean;
-  createdAt: string;
-  participantCount: number;
-}
+import type { Session } from '@/lib/types';
 
 export function SessionList() {
   const { t } = useTranslation();
