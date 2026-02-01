@@ -11,7 +11,7 @@ interface CheckInFlowProps {
   sessionId: number;
   isOpen: boolean;
   onClose: () => void;
-  onCheckIn: (sessionParticipantId: number, name: string, personCount: number) => void;
+  onCheckIn: (sessionParticipantId: number, participantId: number, name: string, personCount: number) => void;
 }
 
 export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFlowProps) {
@@ -72,7 +72,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
       if (res.ok) {
         const sessionParticipant = await res.json();
         setCurrentUserId(sessionParticipant.id);
-        onCheckIn(sessionParticipant.id, selectedParticipant.name, personCount);
+        onCheckIn(sessionParticipant.id, sessionParticipant.participantId, selectedParticipant.name, personCount);
         onClose();
       }
     } finally {
@@ -97,7 +97,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
       if (res.ok) {
         const sessionParticipant = await res.json();
         setCurrentUserId(sessionParticipant.id);
-        onCheckIn(sessionParticipant.id, newName.trim(), personCount);
+        onCheckIn(sessionParticipant.id, sessionParticipant.participantId, newName.trim(), personCount);
         onClose();
       }
     } finally {

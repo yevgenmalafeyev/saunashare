@@ -11,12 +11,13 @@ import type { Session } from '@/lib/types';
 interface SessionWithCheckedIn extends Session {
   userSessionParticipantId?: number;
   billingReady?: boolean;
+  isToday?: boolean;
 }
 
 export function UserDashboard() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { currentUserId, setCurrentUserId } = useAuth();
+  const { setCurrentUserId, checkedInSessions, addCheckedInSession } = useAuth();
   const [sessions, setSessions] = useState<SessionWithCheckedIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -29,45 +30,58 @@ export function UserDashboard() {
         const res = await fetch('/api/sessions');
         const data = await res.json();
 
-        // Filter to only show today's sessions that are not hidden
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const todaySessions = data.sessions.filter((session: Session) => {
+        // Filter sessions: today's (not hidden) OR past sessions where user is checked in (not hidden)
+        const checkedInSessionIds = new Set(Object.keys(checkedInSessions).map(Number));
+
+        const relevantSessions = data.sessions.filter((session: Session) => {
+          if (session.hidden) return false;
+
           const sessionDate = new Date(session.createdAt);
           sessionDate.setHours(0, 0, 0, 0);
-          return sessionDate.getTime() === today.getTime() && !session.hidden;
+          const isToday = sessionDate.getTime() === today.getTime();
+          const isCheckedIn = checkedInSessionIds.has(session.id);
+
+          return isToday || isCheckedIn;
         });
 
-        // Check billing status and if user is already checked in to any session
-        for (const session of todaySessions) {
-          const [participantsRes, billingRes] = await Promise.all([
-            fetch(`/api/sessions/${session.id}/participants`),
-            fetch(`/api/sessions/${session.id}/billing?type=calculate`),
-          ]);
-          const participants = await participantsRes.json();
-          const billingData = await billingRes.json();
+        // Mark sessions with check-in info and billing status
+        for (const session of relevantSessions) {
+          const sessionDate = new Date(session.createdAt);
+          sessionDate.setHours(0, 0, 0, 0);
+          session.isToday = sessionDate.getTime() === today.getTime();
 
-          session.billingReady = billingData.ready;
+          // Check if user is checked in from our local map
+          const checkInRecord = checkedInSessions[session.id];
+          if (checkInRecord) {
+            session.userSessionParticipantId = checkInRecord.sessionParticipantId;
+          }
 
-          if (currentUserId) {
-            const userParticipant = participants.find(
-              (p: { id: number }) => p.id === currentUserId
-            );
-            if (userParticipant) {
-              session.userSessionParticipantId = userParticipant.id;
-            }
+          // Only fetch billing status for today's sessions (for check-in blocking)
+          if (session.isToday && !session.userSessionParticipantId) {
+            const billingRes = await fetch(`/api/sessions/${session.id}/billing?type=calculate`);
+            const billingData = await billingRes.json();
+            session.billingReady = billingData.ready;
           }
         }
 
-        setSessions(todaySessions);
+        // Sort: today's sessions first, then by date descending
+        relevantSessions.sort((a: SessionWithCheckedIn, b: SessionWithCheckedIn) => {
+          if (a.isToday && !b.isToday) return -1;
+          if (!a.isToday && b.isToday) return 1;
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+
+        setSessions(relevantSessions);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchSessions();
-  }, [currentUserId]);
+  }, [checkedInSessions]);
 
   const handleSessionClick = (session: SessionWithCheckedIn) => {
     if (session.userSessionParticipantId) {
@@ -83,9 +97,10 @@ export function UserDashboard() {
     }
   };
 
-  const handleCheckIn = (sessionParticipantId: number) => {
+  const handleCheckIn = (sessionParticipantId: number, participantId: number) => {
     if (selectedSession) {
       setCurrentUserId(sessionParticipantId);
+      addCheckedInSession(selectedSession.id, participantId, sessionParticipantId);
       router.push(`/session/${selectedSession.id}`);
     }
   };
@@ -109,20 +124,31 @@ export function UserDashboard() {
         </div>
       ) : (
         <div className="space-y-3">
-          {sessions.map((session) => (
-            <button
-              key={session.id}
-              onClick={() => handleSessionClick(session)}
-              className="w-full text-left bg-white border-2 border-stone-200 rounded-2xl p-8 hover:border-amber-300 hover:bg-amber-50 transition-colors"
-            >
-              <div>
-                <div className="font-bold text-2xl text-stone-800">{session.name}</div>
-                <div className="text-base text-stone-500 mt-2">
-                  {t('dashboard.participants', { count: session.participantCount })}
+          {sessions.map((session) => {
+            const sessionDate = new Date(session.createdAt);
+            const dateStr = `${sessionDate.getDate().toString().padStart(2, '0')}.${(sessionDate.getMonth() + 1).toString().padStart(2, '0')}.${sessionDate.getFullYear()}`;
+            return (
+              <button
+                key={session.id}
+                onClick={() => handleSessionClick(session)}
+                className={`w-full text-left border-2 rounded-2xl p-8 transition-colors ${
+                  session.isToday
+                    ? 'bg-white border-stone-200 hover:border-amber-300 hover:bg-amber-50'
+                    : 'bg-stone-50 border-stone-200 hover:border-amber-300 hover:bg-amber-50'
+                }`}
+              >
+                <div>
+                  <div className="font-bold text-2xl text-stone-800">{session.name}</div>
+                  <div className="text-base text-stone-500 mt-2">
+                    {!session.isToday && (
+                      <span className="text-stone-400 mr-2">{dateStr}</span>
+                    )}
+                    {t('dashboard.participants', { count: session.participantCount })}
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
       )}
 
