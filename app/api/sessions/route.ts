@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessions, sessionParticipants, expenses } from '@/lib/db/schema';
+import { sessions, expenses } from '@/lib/db/schema';
 import { desc, sql } from 'drizzle-orm';
 import { DEFAULT_EXPENSE_NAME } from '@/lib/constants';
 import { apiSuccess } from '@/lib/utils/api';
@@ -17,9 +17,9 @@ export async function GET(request: NextRequest) {
       hidden: sessions.hidden,
       createdAt: sessions.createdAt,
       participantCount: sql<number>`(
-        SELECT COALESCE(SUM(${sessionParticipants.personCount}), 0)
-        FROM ${sessionParticipants}
-        WHERE ${sessionParticipants.sessionId} = ${sessions.id}
+        SELECT COALESCE(SUM(person_count), 0)
+        FROM session_participants
+        WHERE session_id = sessions.id
       )`,
     })
     .from(sessions)
