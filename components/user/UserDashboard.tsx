@@ -141,7 +141,7 @@ export function UserDashboard() {
                   <div className="font-bold text-2xl text-stone-800">{session.name}</div>
                   <div className="text-base text-stone-500 mt-2">
                     {!session.isToday && (
-                      <span className="text-stone-400 mr-2">{dateStr}</span>
+                      <span className="text-stone-400">{dateStr} · </span>
                     )}
                     {t('dashboard.participants', { count: session.participantCount })}
                   </div>
