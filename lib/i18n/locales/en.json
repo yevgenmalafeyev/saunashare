@@ -132,7 +132,8 @@
     "showBillText": "Show this text to the sauna staff to get your bill"
   },
   "user": {
-    "welcome": "Welcome to Banha de Ioga",
+    "welcome": "Welcome to Yoga-Banya",
+    "buildRoute": "Build route",
     "noActiveSessions": "No open sessions today",
     "waitForSession": "Wait for a session to be created",
     "checkingIn": "Checking in as",

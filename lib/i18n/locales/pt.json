@@ -133,6 +133,7 @@
   },
   "user": {
     "welcome": "Bem-vindo à Banha de Ioga",
+    "buildRoute": "Construir rota",
     "noActiveSessions": "Não há sessões abertas hoje",
     "waitForSession": "Aguarde a criação de uma sessão",
     "checkingIn": "A registar como",

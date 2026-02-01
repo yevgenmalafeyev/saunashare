@@ -2,11 +2,57 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Spinner, Button } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { useAuth } from '@/lib/context/AuthContext';
 import { CheckInFlow } from './CheckInFlow';
 import type { Session } from '@/lib/types';
+
+const SAUNA_ADDRESS = 'Rua Isadora Duncan 24A, Caparica, Portugal';
+const WAZE_URL = `https://waze.com/ul?q=${encodeURIComponent(SAUNA_ADDRESS)}&navigate=yes`;
+const GOOGLE_MAPS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SAUNA_ADDRESS)}`;
+
+function NavigationLinks() {
+  const { t } = useTranslation();
+  return (
+    <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 mb-6">
+      <h3 className="text-lg font-semibold text-stone-700 text-center mb-4">
+        {t('user.buildRoute')}
+      </h3>
+      <div className="flex justify-center gap-8">
+        <a
+          href={WAZE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-all active:scale-95 hover:scale-105"
+        >
+          <Image
+            src="/icons/waze.png"
+            alt="Waze"
+            width={96}
+            height={96}
+            className="rounded-xl"
+          />
+        </a>
+        <a
+          href={GOOGLE_MAPS_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-all active:scale-95 hover:scale-105"
+        >
+          <Image
+            src="/icons/google-maps.png"
+            alt="Google Maps"
+            width={96}
+            height={96}
+            className="rounded-lg"
+          />
+        </a>
+      </div>
+    </div>
+  );
+}
 
 interface SessionWithCheckedIn extends Session {
   userSessionParticipantId?: number;
@@ -116,6 +162,8 @@ export function UserDashboard() {
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-stone-800">{t('user.welcome')}</h2>
+
+      <NavigationLinks />
 
       {sessions.length === 0 ? (
         <div className="text-center py-12">
