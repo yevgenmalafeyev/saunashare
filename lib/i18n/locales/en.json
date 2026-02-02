@@ -134,6 +134,7 @@
   "user": {
     "welcome": "Welcome to Yoga-Banya",
     "buildRoute": "Build route",
+    "orderTaxi": "Order a taxi",
     "noActiveSessions": "No open sessions today",
     "waitForSession": "Wait for a session to be created",
     "checkingIn": "Checking in as",

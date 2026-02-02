@@ -10,13 +10,28 @@ import { CheckInFlow } from './CheckInFlow';
 import type { Session } from '@/lib/types';
 
 const SAUNA_ADDRESS = 'Rua Isadora Duncan 24A, Caparica, Portugal';
+const SAUNA_LAT = 38.641891;
+const SAUNA_LNG = -9.212057;
 const WAZE_URL = `https://waze.com/ul?q=${encodeURIComponent(SAUNA_ADDRESS)}&navigate=yes`;
 const GOOGLE_MAPS_URL = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(SAUNA_ADDRESS)}`;
+const BOLT_URL = `taxify://?action=setPickup&searchTerm=${encodeURIComponent(SAUNA_ADDRESS)}`;
+// Uber requires lat/lng + nickname + address for dropoff to display
+const UBER_URL = `https://m.uber.com/ul/?action=setPickup&pickup=my_location&dropoff[latitude]=${SAUNA_LAT}&dropoff[longitude]=${SAUNA_LNG}&dropoff[nickname]=Sauna&dropoff[formatted_address]=${encodeURIComponent(SAUNA_ADDRESS)}`;
+
+const SAUNA_SHORT_ADDRESS = 'Rua Isadora Duncan 24A, Caparica';
 
 function NavigationLinks() {
   const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = async () => {
+    await navigator.clipboard.writeText(SAUNA_SHORT_ADDRESS);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 mb-6">
+    <div className="bg-white border-2 border-stone-200 rounded-2xl p-6 mb-6">
       <h3 className="text-lg font-semibold text-stone-700 text-center mb-4">
         {t('user.buildRoute')}
       </h3>
@@ -49,6 +64,57 @@ function NavigationLinks() {
             className="rounded-lg"
           />
         </a>
+      </div>
+      <h3 className="text-lg font-semibold text-stone-700 text-center mt-6 mb-4">
+        {t('user.orderTaxi')}
+      </h3>
+      <div className="flex justify-center gap-8">
+        <a
+          href={BOLT_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-all active:scale-95 hover:scale-105"
+        >
+          <Image
+            src="/bolt.png"
+            alt="Bolt"
+            width={96}
+            height={96}
+            className="rounded-xl"
+          />
+        </a>
+        <a
+          href={UBER_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-all active:scale-95 hover:scale-105"
+        >
+          <Image
+            src="/uber.png"
+            alt="Uber"
+            width={96}
+            height={96}
+            className="rounded-xl"
+          />
+        </a>
+      </div>
+      <div className="flex items-center justify-center gap-2 mt-4">
+        <span className="text-base text-stone-500">{SAUNA_SHORT_ADDRESS}</span>
+        <button
+          onClick={copyAddress}
+          className="p-1 rounded hover:bg-stone-100 active:scale-95 transition-all"
+          title={t('billing.copyToClipboard')}
+        >
+          {copied ? (
+            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );
