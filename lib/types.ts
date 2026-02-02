@@ -51,6 +51,7 @@ export interface Session {
   createdAt: string;
   participantCount: number;
   dutyPerson?: 'artur' | 'andrey' | null;
+  isDeletable?: boolean;
 }
 
 /** An expense extracted from a bill image via Claude */

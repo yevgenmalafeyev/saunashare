@@ -21,6 +21,10 @@ export async function GET(request: NextRequest) {
         FROM session_participants
         WHERE session_id = sessions.id
       )`,
+      isDeletable: sql<boolean>`(
+        SELECT COUNT(*) = 0 OR (COUNT(*) = 1 AND MAX(name) = ${DEFAULT_EXPENSE_NAME})
+        FROM expenses WHERE session_id = sessions.id
+      )`,
     })
     .from(sessions)
     .orderBy(desc(sessions.createdAt));

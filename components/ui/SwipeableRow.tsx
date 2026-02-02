@@ -15,6 +15,8 @@ interface SwipeableRowProps {
     onAction: () => void;
     label: string;
     color?: 'red' | 'amber' | 'green';
+    confirmTitle?: string;
+    confirmMessage?: string;
   };
 }
 
@@ -114,8 +116,13 @@ export function SwipeableRow({
 
   const handleLeftActionClick = () => {
     if (leftAction) {
-      leftAction.onAction();
-      close();
+      if (leftAction.confirmTitle || leftAction.confirmMessage) {
+        setConfirmAction('left');
+        setShowConfirm(true);
+      } else {
+        leftAction.onAction();
+        close();
+      }
     }
   };
 
@@ -181,11 +188,15 @@ export function SwipeableRow({
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            {confirmTitle && (
-              <h3 className="text-lg font-semibold text-stone-800 mb-2">{confirmTitle}</h3>
+            {(confirmAction === 'right' ? confirmTitle : leftAction?.confirmTitle) && (
+              <h3 className="text-lg font-semibold text-stone-800 mb-2">
+                {confirmAction === 'right' ? confirmTitle : leftAction?.confirmTitle}
+              </h3>
             )}
-            {confirmMessage && (
-              <p className="text-stone-600 mb-6">{confirmMessage}</p>
+            {(confirmAction === 'right' ? confirmMessage : leftAction?.confirmMessage) && (
+              <p className="text-stone-600 mb-6">
+                {confirmAction === 'right' ? confirmMessage : leftAction?.confirmMessage}
+              </p>
             )}
             <div className="flex gap-3">
               <button

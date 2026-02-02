@@ -43,7 +43,9 @@
     "newSession": "New Session",
     "sessionName": "Session Name",
     "createSession": "Create Session",
-    "creating": "Creating..."
+    "creating": "Creating...",
+    "deleteConfirmTitle": "Delete session?",
+    "deleteConfirmMessage": "This action cannot be undone."
   },
   "session": {
     "participants": "Participants",

@@ -45,6 +45,16 @@ export function SessionList() {
     }
   };
 
+  const handleDelete = async (sessionId: number) => {
+    const res = await fetch(`/api/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+
+    if (res.ok) {
+      fetchSessions();
+    }
+  };
+
   if (isLoading) {
     return <Spinner />;
   }
@@ -76,6 +86,13 @@ export function SessionList() {
           onAction={() => handleToggleHidden(session.id, true)}
           actionLabel={t('common.hide')}
           actionColor="amber"
+          leftAction={session.isDeletable ? {
+            onAction: () => handleDelete(session.id),
+            label: t('common.delete'),
+            color: 'red',
+            confirmTitle: t('dashboard.deleteConfirmTitle'),
+            confirmMessage: t('dashboard.deleteConfirmMessage'),
+          } : undefined}
         >
           <SessionCard
             id={session.id}
@@ -114,6 +131,13 @@ export function SessionList() {
               onAction={() => handleToggleHidden(session.id, false)}
               actionLabel={t('common.unhide')}
               actionColor="amber"
+              leftAction={session.isDeletable ? {
+                onAction: () => handleDelete(session.id),
+                label: t('common.delete'),
+                color: 'red',
+                confirmTitle: t('dashboard.deleteConfirmTitle'),
+                confirmMessage: t('dashboard.deleteConfirmMessage'),
+              } : undefined}
             >
               <div className="opacity-60">
                 <SessionCard

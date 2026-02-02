@@ -43,7 +43,9 @@
     "newSession": "Нова сесія",
     "sessionName": "Назва сесії",
     "createSession": "Створити сесію",
-    "creating": "Створення..."
+    "creating": "Створення...",
+    "deleteConfirmTitle": "Видалити сесію?",
+    "deleteConfirmMessage": "Цю дію неможливо скасувати."
   },
   "session": {
     "participants": "Учасники",

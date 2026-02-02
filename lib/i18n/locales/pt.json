@@ -43,7 +43,9 @@
     "newSession": "Nova Sessão",
     "sessionName": "Nome da Sessão",
     "createSession": "Criar Sessão",
-    "creating": "A criar..."
+    "creating": "A criar...",
+    "deleteConfirmTitle": "Eliminar sessão?",
+    "deleteConfirmMessage": "Esta ação não pode ser desfeita."
   },
   "session": {
     "participants": "Participantes",
