@@ -44,9 +44,20 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   const validated = validateAndRespond(validatePatchSession, body);
   if (validated.error) return validated.error;
 
+  const updateData: { hidden?: boolean; dutyPerson?: string | null; updatedAt: Date } = {
+    updatedAt: new Date(),
+  };
+
+  if ('hidden' in validated.data) {
+    updateData.hidden = validated.data.hidden;
+  }
+  if ('dutyPerson' in validated.data) {
+    updateData.dutyPerson = validated.data.dutyPerson;
+  }
+
   const [session] = await db
     .update(sessions)
-    .set({ hidden: validated.data.hidden, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(sessions.id, sessionId))
     .returning();
 

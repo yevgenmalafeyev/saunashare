@@ -81,17 +81,32 @@ export function validateUpdateSession(data: unknown): ValidationResult<UpdateSes
 }
 
 export interface PatchSessionBody {
-  hidden: boolean;
+  hidden?: boolean;
+  dutyPerson?: 'artur' | 'andrey' | null;
 }
 
 export function validatePatchSession(data: unknown): ValidationResult<PatchSessionBody> {
   return validate(
     data,
     (obj) => {
-      if (typeof obj.hidden !== 'boolean') return null;
-      return { hidden: obj.hidden };
+      const result: PatchSessionBody = {};
+      let hasValidField = false;
+
+      if ('hidden' in obj) {
+        if (typeof obj.hidden !== 'boolean') return null;
+        result.hidden = obj.hidden;
+        hasValidField = true;
+      }
+
+      if ('dutyPerson' in obj) {
+        if (obj.dutyPerson !== 'artur' && obj.dutyPerson !== 'andrey' && obj.dutyPerson !== null) return null;
+        result.dutyPerson = obj.dutyPerson;
+        hasValidField = true;
+      }
+
+      return hasValidField ? result : null;
     },
-    'Hidden must be a boolean'
+    'Must provide hidden (boolean) or dutyPerson (artur/andrey/null)'
   );
 }
 

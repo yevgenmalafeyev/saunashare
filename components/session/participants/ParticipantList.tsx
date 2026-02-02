@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Spinner, CountSelector, SwipeableRow, FloatingButton, CheckCircleIcon } from '@/components/ui';
 import { AddParticipantModal } from './AddParticipantModal';
+import { DutyPersonSwitch } from './DutyPersonSwitch';
 import { useTranslation } from '@/lib/context/I18nContext';
 import type { SessionParticipant } from '@/lib/types';
 import { PERSON_COUNT_OPTIONS, JSON_HEADERS } from '@/lib/constants';
@@ -138,6 +139,8 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
           fetchParticipants(); // Just refresh participant list, don't trigger global refresh
         }}
       />
+
+      <DutyPersonSwitch sessionId={sessionId} onUpdate={onUpdate} />
 
       <FloatingButton onClick={() => setIsAddModalOpen(true)} storageKey="fab-participants" />
     </div>
