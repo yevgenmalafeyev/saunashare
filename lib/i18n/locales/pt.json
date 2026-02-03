@@ -174,7 +174,11 @@
     "forbiddenDesc": "Precisa de um link de acesso válido para usar esta aplicação.",
     "contactAdmin": "Por favor contacte o administrador para obter acesso.",
     "adminMode": "Modo Admin",
-    "userMode": "Modo Utilizador"
+    "userMode": "Modo Utilizador",
+    "enterToken": "Introduza o token de acesso",
+    "tokenPlaceholder": "Cole o seu token aqui",
+    "submit": "Enviar",
+    "invalidToken": "Token inválido. Por favor tente novamente."
   },
   "connection": {
     "noInternet": "Sem Ligação à Internet",
@@ -185,5 +189,17 @@
   },
   "tv": {
     "rotateLandscape": "Rode para paisagem"
+  },
+  "telegram": {
+    "title": "Abrir no Navegador",
+    "description": "Para a melhor experiência e manter a sessão iniciada, abra esta página no seu navegador.",
+    "openBrowser": "Abrir no Navegador",
+    "copyLink": "Copiar Link",
+    "copied": "Link copiado!",
+    "iosInstructions": "Toque no menu ···, depois \"Abrir no Safari\"",
+    "androidInstructions": "Toque no menu ⋮, depois \"Abrir no Chrome\"",
+    "authenticating": "A autenticar com o Telegram...",
+    "authFailed": "A autenticação falhou",
+    "welcomeTelegram": "Bem-vindo, {{name}}!"
   }
 }

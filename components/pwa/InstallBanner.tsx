@@ -6,6 +6,7 @@ import { useI18n } from '@/lib/context/I18nContext';
 import { useAuth } from '@/lib/context/AuthContext';
 import { getPwaInstructions } from '@/lib/i18n/pwa-instructions';
 import { Button } from '@/components/ui';
+import { isTelegramMiniApp } from '@/lib/telegram/context';
 
 const INSTALL_BANNER_DISMISSED_KEY = 'banha-install-banner-dismissed';
 
@@ -16,6 +17,11 @@ export function InstallBanner() {
   const { role } = useAuth();
 
   useEffect(() => {
+    // Never show in Telegram Mini App
+    if (isTelegramMiniApp()) {
+      return;
+    }
+
     // Only show for authenticated users on mobile devices not in standalone mode
     if (!isMobile || isStandalone || role === 'none') {
       return;

@@ -10,6 +10,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@tma.js/init-data-node": "^2.0.6",
     "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.45.1",
     "next": "16.1.6",

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, Input, Button, CountSelector, Spinner } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useTelegram } from '@/hooks/useTelegram';
 import { JSON_HEADERS, PERSON_COUNT_OPTIONS } from '@/lib/constants';
 import type { SessionParticipant, ParticipantSuggestion } from '@/lib/types';
 
@@ -16,7 +17,8 @@ interface CheckInFlowProps {
 
 export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFlowProps) {
   const { t } = useTranslation();
-  const { setCurrentUserId } = useAuth();
+  const { setCurrentUserId, getParticipantSelectionCount, incrementParticipantSelection } = useAuth();
+  const { isInTelegram, linkedParticipantId, linkParticipant } = useTelegram();
   const [allParticipants, setAllParticipants] = useState<ParticipantSuggestion[]>([]);
   const [sessionParticipants, setSessionParticipants] = useState<SessionParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,6 +74,13 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
       if (res.ok) {
         const sessionParticipant = await res.json();
         setCurrentUserId(sessionParticipant.id);
+        incrementParticipantSelection(selectedParticipant.id);
+
+        // Link this participant to Telegram user if in Telegram
+        if (isInTelegram && linkedParticipantId !== selectedParticipant.id) {
+          linkParticipant(selectedParticipant.id);
+        }
+
         onCheckIn(sessionParticipant.id, sessionParticipant.participantId, selectedParticipant.name, personCount);
         onClose();
       }
@@ -97,6 +106,13 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
       if (res.ok) {
         const sessionParticipant = await res.json();
         setCurrentUserId(sessionParticipant.id);
+        incrementParticipantSelection(sessionParticipant.participantId);
+
+        // Link this new participant to Telegram user if in Telegram
+        if (isInTelegram) {
+          linkParticipant(sessionParticipant.participantId);
+        }
+
         onCheckIn(sessionParticipant.id, sessionParticipant.participantId, newName.trim(), personCount);
         onClose();
       }
@@ -190,20 +206,42 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
           {availableParticipants.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
               {availableParticipants
-                .sort((a, b) => b.activityScore - a.activityScore)
-                .map((participant) => (
-                  <button
-                    key={participant.id}
-                    onClick={() => handleSelectParticipant(participant)}
-                    disabled={isSubmitting}
-                    className="py-3 px-4 bg-white border border-stone-200 rounded-xl font-medium text-stone-700 hover:border-amber-300 hover:bg-amber-50 transition-colors disabled:opacity-50"
-                  >
-                    {participant.name}
-                    <span className="text-stone-400 font-normal ml-1">
-                      ({participant.recentPersonCount})
-                    </span>
-                  </button>
-                ))}
+                .sort((a, b) => {
+                  // For Telegram users: prioritize linked participant
+                  if (isInTelegram && linkedParticipantId) {
+                    if (a.id === linkedParticipantId) return -1;
+                    if (b.id === linkedParticipantId) return 1;
+                  }
+
+                  // Then sort by personal selection count (how many times this user selected each participant)
+                  const aSelectionCount = getParticipantSelectionCount(a.id);
+                  const bSelectionCount = getParticipantSelectionCount(b.id);
+                  if (aSelectionCount !== bSelectionCount) {
+                    return bSelectionCount - aSelectionCount;
+                  }
+                  // Then by global activity score
+                  return b.activityScore - a.activityScore;
+                })
+                .map((participant) => {
+                  const isLinkedParticipant = isInTelegram && linkedParticipantId === participant.id;
+                  return (
+                    <button
+                      key={participant.id}
+                      onClick={() => handleSelectParticipant(participant)}
+                      disabled={isSubmitting}
+                      className={`py-3 px-4 rounded-xl font-medium transition-colors disabled:opacity-50 ${
+                        isLinkedParticipant
+                          ? 'bg-amber-100 border-2 border-amber-400 text-amber-800 hover:bg-amber-200'
+                          : 'bg-white border border-stone-200 text-stone-700 hover:border-amber-300 hover:bg-amber-50'
+                      }`}
+                    >
+                      {participant.name}
+                      <span className={`font-normal ml-1 ${isLinkedParticipant ? 'text-amber-600' : 'text-stone-400'}`}>
+                        ({participant.recentPersonCount})
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           )}
           <button

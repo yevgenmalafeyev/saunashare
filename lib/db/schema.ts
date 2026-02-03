@@ -59,6 +59,18 @@ export const appConfig = sqliteTable('app_config', {
   value: text('value').notNull(),
 });
 
+export const telegramUsers = sqliteTable('telegram_users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  telegramUserId: text('telegram_user_id').notNull().unique(),
+  telegramUsername: text('telegram_username'),
+  telegramFirstName: text('telegram_first_name'),
+  participantId: integer('participant_id')
+    .references(() => participants.id, { onDelete: 'set null' }),
+  grantedRole: text('granted_role'), // 'admin' | 'user' | null - role granted via manual token entry
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
 export type Participant = typeof participants.$inferSelect;
 export type NewParticipant = typeof participants.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
@@ -75,3 +87,5 @@ export type SessionParticipantMeta = typeof sessionParticipantMeta.$inferSelect;
 export type NewSessionParticipantMeta = typeof sessionParticipantMeta.$inferInsert;
 export type AppConfig = typeof appConfig.$inferSelect;
 export type NewAppConfig = typeof appConfig.$inferInsert;
+export type TelegramUser = typeof telegramUsers.$inferSelect;
+export type NewTelegramUser = typeof telegramUsers.$inferInsert;
