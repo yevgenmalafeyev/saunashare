@@ -14,6 +14,36 @@ interface ProvidersProps {
   children: ReactNode;
 }
 
+function FullPageSpinner({ message }: { message?: string }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-stone-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500 border-t-transparent mx-auto mb-4" />
+        {message && <p className="text-stone-500 text-sm">{message}</p>}
+      </div>
+    </div>
+  );
+}
+
+interface AuthenticatedProvidersProps {
+  children: ReactNode;
+  role: UserRole;
+  isTelegram?: boolean;
+}
+
+function AuthenticatedProviders({ children, role, isTelegram = false }: AuthenticatedProvidersProps) {
+  return (
+    <I18nProvider>
+      {!isTelegram && <TelegramBanner />}
+      <AuthProvider initialRole={role}>
+        <ConnectionStatus />
+        {!isTelegram && <InstallBanner />}
+        {children}
+      </AuthProvider>
+    </I18nProvider>
+  );
+}
+
 export function Providers({ children }: ProvidersProps) {
   const [role, setRole] = useState<UserRole>('none');
   const [isLoading, setIsLoading] = useState(true);
@@ -65,45 +95,26 @@ export function Providers({ children }: ProvidersProps) {
     }
   }, [isTelegram, role, isLoading]);
 
-  // Show loading spinner while determining auth state
-  if (isLoading && !isTelegram) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500 border-t-transparent" />
-      </div>
-    );
+  // Show loading spinner while determining auth state or redirecting
+  const shouldShowLoadingSpinner = (isLoading && !isTelegram) || (!isTelegram && role === 'none' && !isLoading);
+
+  if (shouldShowLoadingSpinner) {
+    return <FullPageSpinner />;
   }
 
-  // Show loading while redirecting to forbidden
-  if (!isTelegram && role === 'none' && !isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-stone-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500 border-t-transparent" />
-      </div>
-    );
-  }
-
-  // For Telegram Mini App
+  // Telegram Mini App flow
   if (isTelegram) {
     return (
       <TelegramProvider onAuthComplete={handleTelegramAuth} onAccessDenied={handleTelegramAccessDenied}>
         <I18nProvider>
           {telegramAccessDenied ? (
-            // Show access denied with token input for Telegram users
             <AccessDeniedWithTokenInput isTelegram={true} />
           ) : !telegramAuthComplete ? (
-            // Show loading while authenticating with Telegram
-            <div className="min-h-screen flex items-center justify-center bg-stone-50">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500 border-t-transparent mx-auto mb-4" />
-                <p className="text-stone-500 text-sm">Authenticating...</p>
-              </div>
-            </div>
+            <FullPageSpinner message="Authenticating..." />
           ) : (
-            <AuthProvider initialRole={role}>
-              <ConnectionStatus />
+            <AuthenticatedProviders role={role} isTelegram={true}>
               {children}
-            </AuthProvider>
+            </AuthenticatedProviders>
           )}
         </I18nProvider>
       </TelegramProvider>
@@ -114,14 +125,9 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <>
       <TokenRecovery />
-      <I18nProvider>
-        <TelegramBanner />
-        <AuthProvider initialRole={role}>
-          <ConnectionStatus />
-          <InstallBanner />
-          {children}
-        </AuthProvider>
-      </I18nProvider>
+      <AuthenticatedProviders role={role}>
+        {children}
+      </AuthenticatedProviders>
     </>
   );
 }

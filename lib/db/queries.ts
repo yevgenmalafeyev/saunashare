@@ -8,6 +8,21 @@ import { DEFAULT_EXPENSE_NAME } from '@/lib/constants';
 import type { ExpenseWithAssignments } from '@/lib/utils/billing';
 
 /**
+ * Helper to group assignments by expense ID
+ */
+function groupAssignmentsByExpense<T extends { expenseId: number }>(
+  assignments: T[]
+): Map<number, T[]> {
+  const map = new Map<number, T[]>();
+  for (const assignment of assignments) {
+    const existing = map.get(assignment.expenseId) || [];
+    existing.push(assignment);
+    map.set(assignment.expenseId, existing);
+  }
+  return map;
+}
+
+/**
  * Get the default expense for a session
  */
 export async function getDefaultExpense(sessionId: number) {
@@ -86,16 +101,7 @@ export async function getExpensesWithBasicAssignments(sessionId: number) {
       .where(eq(expenses.sessionId, sessionId)),
   ]);
 
-  // Group assignments by expense
-  const assignmentsByExpense = new Map<number, { sessionParticipantId: number; share: number }[]>();
-  for (const assignment of allAssignments) {
-    const existing = assignmentsByExpense.get(assignment.expenseId) || [];
-    existing.push({
-      sessionParticipantId: assignment.sessionParticipantId,
-      share: assignment.share,
-    });
-    assignmentsByExpense.set(assignment.expenseId, existing);
-  }
+  const assignmentsByExpense = groupAssignmentsByExpense(allAssignments);
 
   return allExpenses.map((expense) => ({
     ...expense,
@@ -110,7 +116,7 @@ export async function getExpensesWithBasicAssignments(sessionId: number) {
 export async function getExpensesWithAssignments(
   sessionId: number
 ): Promise<ExpenseWithAssignments[]> {
-  // Fetch all data in parallel (2 queries instead of N+1)
+  // Fetch all data in parallel (3 queries instead of N+1)
   const [allParticipants, allExpenses, allAssignments] = await Promise.all([
     getSessionParticipants(sessionId),
     db.select().from(expenses).where(eq(expenses.sessionId, sessionId)),
@@ -125,16 +131,8 @@ export async function getExpensesWithAssignments(
       .where(eq(expenses.sessionId, sessionId)),
   ]);
 
-  // Build lookup map for participants
   const participantMap = new Map(allParticipants.map((p) => [p.id, p.name]));
-
-  // Group assignments by expense
-  const assignmentsByExpense = new Map<number, typeof allAssignments>();
-  for (const assignment of allAssignments) {
-    const existing = assignmentsByExpense.get(assignment.expenseId) || [];
-    existing.push(assignment);
-    assignmentsByExpense.set(assignment.expenseId, existing);
-  }
+  const assignmentsByExpense = groupAssignmentsByExpense(allAssignments);
 
   return allExpenses.map((expense) => ({
     id: expense.id,

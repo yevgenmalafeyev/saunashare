@@ -26,15 +26,11 @@ function getSnapshot(): DeviceInfo {
 
   const userAgent = navigator.userAgent.toLowerCase();
 
-  // Detect device type
-  let deviceType: DeviceType = 'desktop';
-  const isMobile = /iphone|ipad|ipod|android|mobile/i.test(userAgent);
+  const isIOS = /iphone|ipad|ipod/i.test(userAgent);
+  const isAndroid = /android/i.test(userAgent);
+  const isMobile = isIOS || isAndroid || /mobile/i.test(userAgent);
 
-  if (/iphone|ipad|ipod/i.test(userAgent)) {
-    deviceType = 'ios';
-  } else if (/android/i.test(userAgent)) {
-    deviceType = 'android';
-  }
+  const deviceType: DeviceType = isIOS ? 'ios' : isAndroid ? 'android' : 'desktop';
 
   // Check if running as standalone PWA
   const isStandalone =

@@ -8,18 +8,33 @@ interface Position {
 }
 
 const DEFAULT_POSITION: Position = { right: 24, bottom: 24 };
+const DRAG_THRESHOLD = 10;
+const BUTTON_SIZE = 72;
+const MIN_MARGIN = 16;
 
 function getInitialPosition(storageKey: string): Position {
   if (typeof window === 'undefined') return DEFAULT_POSITION;
   try {
     const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    return saved ? JSON.parse(saved) : DEFAULT_POSITION;
   } catch {
-    // Ignore errors
+    return DEFAULT_POSITION;
   }
-  return DEFAULT_POSITION;
+}
+
+function savePosition(storageKey: string, position: Position): void {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(position));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+function clampPosition(right: number, bottom: number): Position {
+  return {
+    right: Math.max(MIN_MARGIN, Math.min(window.innerWidth - BUTTON_SIZE, right)),
+    bottom: Math.max(MIN_MARGIN, Math.min(window.innerHeight - BUTTON_SIZE, bottom)),
+  };
 }
 
 interface UseDraggablePositionOptions {
@@ -55,11 +70,7 @@ export function useDraggablePosition({
 
   // Save position when it changes
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(position));
-    } catch {
-      // Ignore errors
-    }
+    savePosition(storageKey, position);
   }, [position, storageKey]);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -79,14 +90,16 @@ export function useDraggablePosition({
     const deltaX = dragStartRef.current.x - touch.clientX;
     const deltaY = dragStartRef.current.y - touch.clientY;
 
-    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+    if (Math.abs(deltaX) > DRAG_THRESHOLD || Math.abs(deltaY) > DRAG_THRESHOLD) {
       hasMoved.current = true;
     }
 
-    const newRight = Math.max(16, Math.min(window.innerWidth - 72, positionStartRef.current.right + deltaX));
-    const newBottom = Math.max(16, Math.min(window.innerHeight - 72, positionStartRef.current.bottom + deltaY));
+    const newPosition = clampPosition(
+      positionStartRef.current.right + deltaX,
+      positionStartRef.current.bottom + deltaY
+    );
 
-    setPosition({ right: newRight, bottom: newBottom });
+    setPosition(newPosition);
   }, [isDragging]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {

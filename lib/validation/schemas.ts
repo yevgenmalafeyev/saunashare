@@ -25,6 +25,7 @@ export function validateAndRespond<T>(
   return { data: validation.data! };
 }
 
+// Type guards
 function isObject(data: unknown): data is Record<string, unknown> {
   return typeof data === 'object' && data !== null;
 }
@@ -33,8 +34,20 @@ function isNumberInRange(value: unknown, min: number, max: number): value is num
   return typeof value === 'number' && value >= min && value <= max;
 }
 
+function isPositiveNumber(value: unknown): value is number {
+  return typeof value === 'number' && value > 0;
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === 'number' && value >= 0;
+}
+
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isValidDutyPerson(value: unknown): value is 'artur' | 'andrey' | null {
+  return value === 'artur' || value === 'andrey' || value === null;
 }
 
 function validate<T>(
@@ -63,9 +76,7 @@ export function validateCreateSession(data: unknown): ValidationResult<CreateSes
     data,
     (obj) => {
       if (!isNonEmptyString(obj.name)) return null;
-      const dutyPerson = obj.dutyPerson === 'artur' || obj.dutyPerson === 'andrey'
-        ? obj.dutyPerson
-        : null;
+      const dutyPerson = isValidDutyPerson(obj.dutyPerson) ? obj.dutyPerson : null;
       return { name: obj.name.trim(), dutyPerson };
     },
     'Name is required and must be a non-empty string'
@@ -99,7 +110,7 @@ export function validatePatchSession(data: unknown): ValidationResult<PatchSessi
       }
 
       if ('dutyPerson' in obj) {
-        if (obj.dutyPerson !== 'artur' && obj.dutyPerson !== 'andrey' && obj.dutyPerson !== null) return null;
+        if (!isValidDutyPerson(obj.dutyPerson)) return null;
         result.dutyPerson = obj.dutyPerson;
         hasValidField = true;
       }
@@ -218,7 +229,7 @@ export function validateUpdateAssignments(data: unknown): ValidationResult<Updat
       const assignments = obj.assignments.map((a: unknown) => {
         if (!isObject(a)) return null;
         if (typeof a.sessionParticipantId !== 'number') return null;
-        if (typeof a.share !== 'number' || a.share < 0) return null;
+        if (!isNonNegativeNumber(a.share)) return null;
         return {
           sessionParticipantId: a.sessionParticipantId,
           share: a.share,
@@ -245,7 +256,7 @@ export function validateCreateUserExpense(data: unknown): ValidationResult<Creat
     (obj) => {
       if (!isNonEmptyString(obj.name)) return null;
       if (typeof obj.sessionParticipantId !== 'number') return null;
-      const share = typeof obj.share === 'number' && obj.share > 0 ? obj.share : 1;
+      const share = isPositiveNumber(obj.share) ? obj.share : 1;
       return {
         name: obj.name.trim(),
         share,
@@ -266,7 +277,7 @@ export function validateUpdateUserShare(data: unknown): ValidationResult<UpdateU
     data,
     (obj) => {
       if (typeof obj.sessionParticipantId !== 'number') return null;
-      if (typeof obj.newShare !== 'number' || obj.newShare < 0) return null;
+      if (!isNonNegativeNumber(obj.newShare)) return null;
       return {
         sessionParticipantId: obj.sessionParticipantId,
         newShare: obj.newShare,

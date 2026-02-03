@@ -30,56 +30,74 @@ export function generateBillRequestText(
   return text;
 }
 
-export function calculateBills(
-  participants: { id: number; participantId: number; name: string; personCount: number }[],
-  expenses: ExpenseWithAssignments[]
-): ParticipantBill[] {
-  // Build lookup map for O(1) access
-  const billsBySessionParticipantId = new Map<number, ParticipantBill>();
+function createInitialBill(participant: {
+  id: number;
+  participantId: number;
+  name: string;
+  personCount: number;
+}): ParticipantBill {
+  return {
+    sessionParticipantId: participant.id,
+    participantId: participant.participantId,
+    participantName: participant.name,
+    personCount: participant.personCount,
+    total: 0,
+    breakdown: [],
+  };
+}
 
-  const bills: ParticipantBill[] = participants.map(p => {
-    const bill: ParticipantBill = {
-      sessionParticipantId: p.id,
-      participantId: p.participantId,
-      participantName: p.name,
-      personCount: p.personCount,
-      total: 0,
-      breakdown: [],
-    };
-    billsBySessionParticipantId.set(p.id, bill);
-    return bill;
-  });
+function processExpenseForBills(
+  expense: ExpenseWithAssignments,
+  billsBySessionParticipantId: Map<number, ParticipantBill>
+): void {
+  if (expense.totalCost === null) return;
 
-  for (const expense of expenses) {
-    if (expense.totalCost === null) continue;
+  const totalShares = expense.assignments.reduce((sum, a) => sum + a.share, 0);
+  if (totalShares === 0) return;
 
-    const totalShares = expense.assignments.reduce((sum, a) => sum + a.share, 0);
-    if (totalShares === 0) continue;
+  const costPerShare = expense.totalCost / totalShares;
 
-    const costPerShare = expense.totalCost / totalShares;
-
-    for (const assignment of expense.assignments) {
-      const bill = billsBySessionParticipantId.get(assignment.sessionParticipantId);
-      if (bill) {
-        const cost = assignment.share * costPerShare;
-        bill.total += cost;
-        bill.breakdown.push({
-          expenseId: expense.id,
-          expenseName: expense.name,
-          share: assignment.share,
-          cost,
-        });
-      }
+  for (const assignment of expense.assignments) {
+    const bill = billsBySessionParticipantId.get(assignment.sessionParticipantId);
+    if (bill) {
+      const cost = assignment.share * costPerShare;
+      bill.total += cost;
+      bill.breakdown.push({
+        expenseId: expense.id,
+        expenseName: expense.name,
+        share: assignment.share,
+        cost,
+      });
     }
   }
+}
 
-  // Round totals
+function roundBillTotals(bills: ParticipantBill[]): void {
   for (const bill of bills) {
     bill.total = Math.round(bill.total);
     for (const item of bill.breakdown) {
       item.cost = Math.round(item.cost * 100) / 100;
     }
   }
+}
+
+export function calculateBills(
+  participants: { id: number; participantId: number; name: string; personCount: number }[],
+  expenses: ExpenseWithAssignments[]
+): ParticipantBill[] {
+  const billsBySessionParticipantId = new Map<number, ParticipantBill>();
+
+  const bills: ParticipantBill[] = participants.map(p => {
+    const bill = createInitialBill(p);
+    billsBySessionParticipantId.set(p.id, bill);
+    return bill;
+  });
+
+  for (const expense of expenses) {
+    processExpenseForBills(expense, billsBySessionParticipantId);
+  }
+
+  roundBillTotals(bills);
 
   return bills;
 }

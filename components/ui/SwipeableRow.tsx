@@ -40,21 +40,16 @@ export function SwipeableRow({
   const offsetRef = useRef(0);
   const isDraggingRef = useRef(false);
 
-  const getColorClass = (color: 'red' | 'amber' | 'green' = 'red') => {
-    switch (color) {
-      case 'red': return 'bg-red-500';
-      case 'amber': return 'bg-amber-500';
-      case 'green': return 'bg-green-500';
-    }
-  };
+  const colorClasses = {
+    red: { bg: 'bg-red-500', btn: 'bg-red-600 hover:bg-red-700' },
+    amber: { bg: 'bg-amber-500', btn: 'bg-amber-600 hover:bg-amber-700' },
+    green: { bg: 'bg-green-500', btn: 'bg-green-600 hover:bg-green-700' },
+  } as const;
 
-  const getConfirmBtnClass = (color: 'red' | 'amber' | 'green' = 'red') => {
-    switch (color) {
-      case 'red': return 'bg-red-600 hover:bg-red-700';
-      case 'amber': return 'bg-amber-600 hover:bg-amber-700';
-      case 'green': return 'bg-green-600 hover:bg-green-700';
-    }
-  };
+  type ActionColor = keyof typeof colorClasses;
+
+  const getColorClass = (color: ActionColor = 'red') => colorClasses[color].bg;
+  const getConfirmBtnClass = (color: ActionColor = 'red') => colorClasses[color].btn;
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startXRef.current = e.touches[0].clientX;
@@ -148,7 +143,10 @@ export function SwipeableRow({
 
   const rightBgColor = getColorClass(actionColor);
   const leftBgColor = leftAction ? getColorClass(leftAction.color) : '';
-  const confirmBtnColor = getConfirmBtnClass(confirmAction === 'right' ? actionColor : leftAction?.color);
+  const activeActionColor = confirmAction === 'right' ? actionColor : leftAction?.color;
+  const confirmBtnColor = getConfirmBtnClass(activeActionColor);
+  const activeConfirmTitle = confirmAction === 'right' ? confirmTitle : leftAction?.confirmTitle;
+  const activeConfirmMessage = confirmAction === 'right' ? confirmMessage : leftAction?.confirmMessage;
 
   return (
     <>
@@ -188,14 +186,14 @@ export function SwipeableRow({
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-            {(confirmAction === 'right' ? confirmTitle : leftAction?.confirmTitle) && (
+            {activeConfirmTitle && (
               <h3 className="text-lg font-semibold text-stone-800 mb-2">
-                {confirmAction === 'right' ? confirmTitle : leftAction?.confirmTitle}
+                {activeConfirmTitle}
               </h3>
             )}
-            {(confirmAction === 'right' ? confirmMessage : leftAction?.confirmMessage) && (
+            {activeConfirmMessage && (
               <p className="text-stone-600 mb-6">
-                {confirmAction === 'right' ? confirmMessage : leftAction?.confirmMessage}
+                {activeConfirmMessage}
               </p>
             )}
             <div className="flex gap-3">

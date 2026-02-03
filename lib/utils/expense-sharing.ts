@@ -14,6 +14,10 @@ export interface Assignment {
 
 /**
  * Calculate unassigned items for an expense
+ *
+ * @param itemCount Total item count for the expense
+ * @param assignments All assignments for the expense
+ * @returns Number of unassigned items (always >= 0)
  */
 export function calculateUnassigned(itemCount: number, assignments: Assignment[]): number {
   const totalAssigned = assignments.reduce((sum, a) => sum + a.share, 0);
@@ -28,6 +32,12 @@ export function calculateUnassigned(itemCount: number, assignments: Assignment[]
  * - Decrease share: itemCount -= (oldShare - newShare)
  * - For non-integer reductions (e.g., 1.5, 2.5), floor the reduction
  *   This ensures reducing to 0.5 only creates 0.5 unassigned, not more
+ *
+ * @param currentItemCount Current total item count for the expense
+ * @param oldShare User's previous share amount
+ * @param newShare User's new share amount
+ * @param otherAssignments All other user assignments (excluding current user)
+ * @returns New itemCount for the expense
  */
 export function calculateShareChange(
   currentItemCount: number,
@@ -38,16 +48,12 @@ export function calculateShareChange(
   const delta = newShare - oldShare;
 
   if (delta > 0) {
-    // Increasing share: always add to itemCount
     return currentItemCount + delta;
-  } else if (delta < 0) {
-    // Decreasing share
+  }
+
+  if (delta < 0) {
     const reduction = Math.abs(delta);
-
-    // For non-integer reductions, floor the amount
-    // e.g., reducing by 1.5 → reduce itemCount by 1, leaving 0.5 unassigned
     const actualReduction = Number.isInteger(reduction) ? reduction : Math.floor(reduction);
-
     const newItemCount = currentItemCount - actualReduction;
 
     // Ensure itemCount doesn't go below the sum of all shares after change
@@ -64,27 +70,35 @@ export function calculateShareChange(
  * Rules:
  * - Delete with share >= 1: itemCount -= share
  * - Delete with share = 0.5: itemCount -= 1
+ *
+ * @param currentItemCount Current total item count for the expense
+ * @param userShare Share amount being deleted
+ * @param otherAssignments All other user assignments (excluding deleted user)
+ * @returns New itemCount for the expense
  */
 export function calculateDeletion(
   currentItemCount: number,
   userShare: number,
   otherAssignments: Assignment[]
 ): number {
+  // Special case: 0.5 share deletion removes 1 from itemCount
   if (userShare === 0.5) {
-    // Special case: 0.5 share deletion removes 1 from itemCount
     return Math.max(0, currentItemCount - 1);
   }
 
-  // Normal case: reduce by user's share
   const newItemCount = currentItemCount - userShare;
-
-  // Ensure itemCount doesn't go below total of other assignments
   const otherTotal = otherAssignments.reduce((sum, a) => sum + a.share, 0);
+
   return Math.max(otherTotal, newItemCount);
 }
 
 /**
  * Calculate itemCount when adding a new user to an existing expense
+ *
+ * @param currentItemCount Current total item count for the expense
+ * @param newShare Share amount for the new user
+ * @param existingAssignments All current assignments before adding new user
+ * @returns New itemCount for the expense
  */
 export function calculateAddition(
   currentItemCount: number,
@@ -94,10 +108,8 @@ export function calculateAddition(
   const unassigned = calculateUnassigned(currentItemCount, existingAssignments);
 
   if (newShare <= unassigned) {
-    // Enough unassigned items, no need to increase itemCount
     return currentItemCount;
   }
 
-  // Need to increase itemCount
   return currentItemCount + (newShare - unassigned);
 }
