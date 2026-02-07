@@ -6,8 +6,7 @@ import { Modal, Input, Button, FloatingButton } from '@/components/ui';
 import { formatSessionDate } from '@/lib/utils/billing';
 import { JSON_HEADERS } from '@/lib/constants';
 import { useTranslation } from '@/lib/context/I18nContext';
-
-type DutyPerson = 'artur' | 'andrey';
+import type { DutyPerson } from '@/lib/types';
 
 export function CreateSessionButton() {
   const [isOpen, setIsOpen] = useState(false);

@@ -3,17 +3,16 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
+import type { DutyPerson } from '@/lib/types';
 
 interface DutyPersonSwitchProps {
   sessionId: number;
   onUpdate?: () => void;
 }
 
-type DutyPerson = 'artur' | 'andrey' | null;
-
 export function DutyPersonSwitch({ sessionId, onUpdate }: DutyPersonSwitchProps) {
   const { t } = useTranslation();
-  const [dutyPerson, setDutyPerson] = useState<DutyPerson>(null);
+  const [dutyPerson, setDutyPerson] = useState<DutyPerson | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +22,7 @@ export function DutyPersonSwitch({ sessionId, onUpdate }: DutyPersonSwitchProps)
       .finally(() => setIsLoading(false));
   }, [sessionId]);
 
-  const handleSelect = async (person: DutyPerson) => {
+  const handleSelect = async (person: DutyPerson | null) => {
     if (person === dutyPerson) return;
 
     setDutyPerson(person);

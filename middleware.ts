@@ -1,14 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-
-const ROLE_COOKIE_NAME = 'banha-role';
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
-
-// Note: We can't use drizzle in middleware (edge runtime), so we use a simpler approach
-// Tokens are validated by comparing with environment variables
-// These should match the seeded values in app_config table
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'cd3d0ebea24eb99fc7e7c220207b1dec';
-const USER_TOKEN = process.env.USER_TOKEN || 'f6b8fda5ba595d9233bc55f0675b2174';
+import { ADMIN_TOKEN, USER_TOKEN, ROLE_COOKIE_NAME, COOKIE_MAX_AGE } from '@/lib/auth/constants';
 
 /**
  * Detect if request is from an in-app browser (Telegram, etc.)

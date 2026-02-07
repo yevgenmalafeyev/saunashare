@@ -3,6 +3,7 @@
  */
 
 import { apiError } from '@/lib/utils/api';
+import type { DutyPerson } from '@/lib/types';
 
 export interface ValidationResult<T> {
   success: boolean;
@@ -46,7 +47,7 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-function isValidDutyPerson(value: unknown): value is 'artur' | 'andrey' | null {
+function isValidDutyPerson(value: unknown): value is DutyPerson | null {
   return value === 'artur' || value === 'andrey' || value === null;
 }
 
@@ -68,7 +69,7 @@ function validate<T>(
 // Session schemas
 export interface CreateSessionBody {
   name: string;
-  dutyPerson?: 'artur' | 'andrey' | null;
+  dutyPerson?: DutyPerson | null;
 }
 
 export function validateCreateSession(data: unknown): ValidationResult<CreateSessionBody> {
@@ -93,7 +94,7 @@ export function validateUpdateSession(data: unknown): ValidationResult<UpdateSes
 
 export interface PatchSessionBody {
   hidden?: boolean;
-  dutyPerson?: 'artur' | 'andrey' | null;
+  dutyPerson?: DutyPerson | null;
 }
 
 export function validatePatchSession(data: unknown): ValidationResult<PatchSessionBody> {

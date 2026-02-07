@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { PhoneIcon, MessageIcon } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
+import type { DutyPerson } from '@/lib/types';
 
 interface ContactButtonsProps {
-  dutyPerson: 'artur' | 'andrey' | null;
+  dutyPerson: DutyPerson | null;
 }
 
 export function ContactButtons({ dutyPerson }: ContactButtonsProps) {

@@ -43,6 +43,9 @@ export interface ParticipantBill {
   }[];
 }
 
+/** The two possible duty persons */
+export type DutyPerson = 'artur' | 'andrey';
+
 /** Session data as returned by the API */
 export interface Session {
   id: number;
@@ -50,7 +53,7 @@ export interface Session {
   hidden: boolean;
   createdAt: string;
   participantCount: number;
-  dutyPerson?: 'artur' | 'andrey' | null;
+  dutyPerson?: DutyPerson | null;
   isDeletable?: boolean;
 }
 

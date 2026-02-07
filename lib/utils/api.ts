@@ -12,7 +12,11 @@ export async function parseRouteParams<T extends Record<string, string>>(
   const result = {} as { [K in keyof T]: number };
 
   for (const key in resolved) {
-    result[key] = parseInt(resolved[key], 10);
+    const parsed = parseInt(resolved[key], 10);
+    if (isNaN(parsed)) {
+      throw new Error(`Invalid route param "${key}": expected a number, got "${resolved[key]}"`);
+    }
+    result[key] = parsed;
   }
 
   return result;

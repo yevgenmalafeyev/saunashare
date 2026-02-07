@@ -1,8 +1,9 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import type { UserRole } from '@/lib/auth/constants';
 
-export type UserRole = 'admin' | 'user' | 'none';
+export type { UserRole };
 export type ActiveMode = 'admin' | 'user';
 
 // Maps sessionId -> check-in info (participantId and sessionParticipantId)

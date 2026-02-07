@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from './schema';
 import path from 'path';
 import fs from 'fs';
+import { ADMIN_TOKEN, USER_TOKEN } from '@/lib/auth/constants';
 
 const dataDir = path.join(process.cwd(), 'data');
 if (!fs.existsSync(dataDir)) {
@@ -46,8 +47,8 @@ function initializeDatabase() {
       }
     };
 
-    seedConfig('admin-token', 'cd3d0ebea24eb99fc7e7c220207b1dec');
-    seedConfig('user-token', 'f6b8fda5ba595d9233bc55f0675b2174');
+    seedConfig('admin-token', ADMIN_TOKEN);
+    seedConfig('user-token', USER_TOKEN);
     seedConfig('artur-phone', '+351924689616');
     seedConfig('andrey-phone', '+351963383623');
   } catch {

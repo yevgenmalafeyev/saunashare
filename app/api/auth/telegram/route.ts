@@ -8,11 +8,8 @@ import { db } from '@/lib/db';
 import { telegramUsers, participants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { validateTelegramAuth } from '@/lib/telegram/validation';
-import { ROLE_COOKIE_NAME, COOKIE_MAX_AGE } from '@/lib/auth/tokens';
+import { ADMIN_TOKEN, USER_TOKEN, ROLE_COOKIE_NAME, COOKIE_MAX_AGE } from '@/lib/auth/constants';
 import { apiSuccess, apiError } from '@/lib/utils/api';
-
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'cd3d0ebea24eb99fc7e7c220207b1dec';
-const USER_TOKEN = process.env.USER_TOKEN || 'f6b8fda5ba595d9233bc55f0675b2174';
 
 export async function POST(request: Request) {
   try {
