@@ -26,11 +26,26 @@ export async function POST(request: Request) {
       return apiError(authResult.error || 'Authentication failed', 401);
     }
 
-    // Get or create telegram user record
+    // Get or create telegram user record (check by numeric ID first, then by username for pre-seeded records)
     let [existingTelegramUser] = await db
       .select()
       .from(telegramUsers)
       .where(eq(telegramUsers.telegramUserId, authResult.telegramUserId));
+
+    if (!existingTelegramUser && authResult.username) {
+      [existingTelegramUser] = await db
+        .select()
+        .from(telegramUsers)
+        .where(eq(telegramUsers.telegramUsername, authResult.username));
+
+      // Claim this pre-seeded record by updating to real Telegram user ID
+      if (existingTelegramUser) {
+        await db
+          .update(telegramUsers)
+          .set({ telegramUserId: authResult.telegramUserId })
+          .where(eq(telegramUsers.id, existingTelegramUser.id));
+      }
+    }
 
     let linkedParticipantIds: number[] = [];
     let finalRole: 'admin' | 'user' | null = null;
