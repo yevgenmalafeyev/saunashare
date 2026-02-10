@@ -31,7 +31,7 @@ export function isIOS(): boolean {
   return testUserAgent(/iPhone|iPad|iPod/i);
 }
 
-export function isAndroid(): boolean {
+function isAndroid(): boolean {
   return testUserAgent(/Android/i);
 }
 

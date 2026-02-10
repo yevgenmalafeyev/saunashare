@@ -25,6 +25,7 @@ interface AuthContextType {
   setActiveMode: (mode: ActiveMode) => void;
   setCurrentUserId: (id: number | null) => void;
   addCheckedInSession: (sessionId: number, participantId: number, sessionParticipantId: number) => void;
+  mergeServerSessions: (serverSessions: Record<number, { participantId: number; sessionParticipantId: number }>) => void;
   getCheckedInSession: (sessionId: number) => CheckInRecord | undefined;
   getParticipantSelectionCount: (participantId: number) => number;
   incrementParticipantSelection: (participantId: number) => void;
@@ -137,6 +138,15 @@ export function AuthProvider({ children, initialRole }: AuthProviderProps) {
     });
   };
 
+  const mergeServerSessions = (serverSessions: Record<number, { participantId: number; sessionParticipantId: number }>) => {
+    setCheckedInSessionsState((prev) => {
+      // Server data as base, localStorage (prev) overwrites — local check-ins take precedence
+      const merged = { ...serverSessions, ...prev };
+      LocalStorageHelper.setJson(CHECKED_IN_SESSIONS_KEY, merged);
+      return merged;
+    });
+  };
+
   const getCheckedInSession = (sessionId: number): CheckInRecord | undefined => {
     return checkedInSessions[sessionId];
   };
@@ -162,6 +172,7 @@ export function AuthProvider({ children, initialRole }: AuthProviderProps) {
     setActiveMode,
     setCurrentUserId,
     addCheckedInSession,
+    mergeServerSessions,
     getCheckedInSession,
     getParticipantSelectionCount,
     incrementParticipantSelection,

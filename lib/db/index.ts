@@ -51,6 +51,23 @@ function initializeDatabase() {
     seedConfig('user-token', USER_TOKEN);
     seedConfig('artur-phone', '+351924689616');
     seedConfig('andrey-phone', '+351963383623');
+
+    // Create junction table if it doesn't exist (for production migration)
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS telegram_user_participants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telegram_user_id INTEGER NOT NULL REFERENCES telegram_users(id) ON DELETE CASCADE,
+        participant_id INTEGER NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
+        created_at INTEGER NOT NULL DEFAULT (unixepoch())
+      )
+    `);
+    sqlite.exec('CREATE UNIQUE INDEX IF NOT EXISTS tup_unique ON telegram_user_participants(telegram_user_id, participant_id)');
+
+    // Migrate existing telegram_users.participant_id into junction table (idempotent)
+    sqlite.prepare(`
+      INSERT OR IGNORE INTO telegram_user_participants (telegram_user_id, participant_id, created_at)
+      SELECT id, participant_id, updated_at FROM telegram_users WHERE participant_id IS NOT NULL
+    `).run();
   } catch {
     // Ignore initialization errors during build (tables may not exist yet)
   }

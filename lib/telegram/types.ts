@@ -28,7 +28,7 @@ export interface TelegramAuthResult {
   telegramUserId: string;
   username?: string;
   firstName?: string;
-  linkedParticipantId?: number;
+  linkedParticipantIds?: number[];
   isWhitelisted?: boolean;
   error?: string;
 }
@@ -39,7 +39,7 @@ export interface TelegramContext {
   telegramUserId?: string;
   username?: string;
   firstName?: string;
-  linkedParticipantId?: number;
+  linkedParticipantIds: number[];
 }
 
 // Telegram WebApp types for window object

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Spinner, Button } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { useAuth } from '@/lib/context/AuthContext';
+import { useTelegram } from '@/hooks/useTelegram';
 import { CheckInFlow } from './CheckInFlow';
 import type { Session } from '@/lib/types';
 
@@ -129,7 +130,8 @@ interface SessionWithCheckedIn extends Session {
 export function UserDashboard() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { setCurrentUserId, checkedInSessions, addCheckedInSession } = useAuth();
+  const { setCurrentUserId, checkedInSessions, addCheckedInSession, mergeServerSessions } = useAuth();
+  const { isInTelegram, linkedParticipantIds } = useTelegram();
   const [sessions, setSessions] = useState<SessionWithCheckedIn[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -139,6 +141,19 @@ export function UserDashboard() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
+        // For Telegram users, fetch server-linked sessions and merge into local state
+        if (isInTelegram && linkedParticipantIds.length > 0) {
+          try {
+            const tgRes = await fetch(`/api/auth/telegram/sessions?participantIds=${linkedParticipantIds.join(',')}`);
+            if (tgRes.ok) {
+              const serverData = await tgRes.json();
+              mergeServerSessions(serverData);
+            }
+          } catch {
+            // Non-critical — continue with local data
+          }
+        }
+
         const res = await fetch('/api/sessions');
         const data = await res.json();
 
@@ -148,22 +163,19 @@ export function UserDashboard() {
         // Filter sessions: today's (not hidden) OR past sessions where user is checked in (not hidden)
         const checkedInSessionIds = new Set(Object.keys(checkedInSessions).map(Number));
 
-        const relevantSessions = data.sessions.filter((session: Session) => {
+        const relevantSessions = data.sessions.filter((session: Session & { isToday?: boolean }) => {
           if (session.hidden) return false;
 
           const sessionDate = new Date(session.createdAt);
           sessionDate.setHours(0, 0, 0, 0);
-          const isToday = sessionDate.getTime() === today.getTime();
+          session.isToday = sessionDate.getTime() === today.getTime();
           const isCheckedIn = checkedInSessionIds.has(session.id);
 
-          return isToday || isCheckedIn;
+          return session.isToday || isCheckedIn;
         });
 
         // Mark sessions with check-in info and billing status
         for (const session of relevantSessions) {
-          const sessionDate = new Date(session.createdAt);
-          sessionDate.setHours(0, 0, 0, 0);
-          session.isToday = sessionDate.getTime() === today.getTime();
 
           // Check if user is checked in from our local map
           const checkInRecord = checkedInSessions[session.id];
@@ -193,11 +205,12 @@ export function UserDashboard() {
     };
 
     fetchSessions();
-  }, [checkedInSessions]);
+  }, [checkedInSessions, isInTelegram, linkedParticipantIds, mergeServerSessions]);
 
   const handleSessionClick = (session: SessionWithCheckedIn) => {
     if (session.userSessionParticipantId) {
-      // Already checked in, go to session view
+      // Already checked in — set correct currentUserId before navigating
+      setCurrentUserId(session.userSessionParticipantId);
       router.push(`/session/${session.id}`);
     } else if (session.billingReady) {
       // Bill already issued, cannot check in

@@ -96,6 +96,20 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
 
     const newHasPaid = !bill.hasPaid;
 
+    const revertPayment = () => {
+      setStatus((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          bills: prev.bills.map((b) =>
+            b.sessionParticipantId === bill.sessionParticipantId
+              ? { ...b, hasPaid: !newHasPaid }
+              : b
+          ),
+        };
+      });
+    };
+
     // Optimistic update
     setStatus((prev) => {
       if (!prev) return prev;
@@ -122,32 +136,10 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
       );
 
       if (!res.ok) {
-        // Revert on failure
-        setStatus((prev) => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            bills: prev.bills.map((b) =>
-              b.sessionParticipantId === bill.sessionParticipantId
-                ? { ...b, hasPaid: !newHasPaid }
-                : b
-            ),
-          };
-        });
+        revertPayment();
       }
     } catch {
-      // Revert on error
-      setStatus((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          bills: prev.bills.map((b) =>
-            b.sessionParticipantId === bill.sessionParticipantId
-              ? { ...b, hasPaid: !newHasPaid }
-              : b
-          ),
-        };
-      });
+      revertPayment();
     } finally {
       setTogglingPayment((prev) => {
         const next = new Set(prev);

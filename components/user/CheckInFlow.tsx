@@ -18,7 +18,7 @@ interface CheckInFlowProps {
 export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFlowProps) {
   const { t } = useTranslation();
   const { setCurrentUserId, getParticipantSelectionCount, incrementParticipantSelection } = useAuth();
-  const { isInTelegram, linkedParticipantId, linkParticipant } = useTelegram();
+  const { isInTelegram, linkedParticipantIds } = useTelegram();
   const [allParticipants, setAllParticipants] = useState<ParticipantSuggestion[]>([]);
   const [sessionParticipants, setSessionParticipants] = useState<SessionParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,11 +76,6 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
         setCurrentUserId(sessionParticipant.id);
         incrementParticipantSelection(selectedParticipant.id);
 
-        // Link this participant to Telegram user if in Telegram
-        if (isInTelegram && linkedParticipantId !== selectedParticipant.id) {
-          linkParticipant(selectedParticipant.id);
-        }
-
         onCheckIn(sessionParticipant.id, sessionParticipant.participantId, selectedParticipant.name, personCount);
         onClose();
       }
@@ -107,11 +102,6 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
         const sessionParticipant = await res.json();
         setCurrentUserId(sessionParticipant.id);
         incrementParticipantSelection(sessionParticipant.participantId);
-
-        // Link this new participant to Telegram user if in Telegram
-        if (isInTelegram) {
-          linkParticipant(sessionParticipant.participantId);
-        }
 
         onCheckIn(sessionParticipant.id, sessionParticipant.participantId, newName.trim(), personCount);
         onClose();
@@ -207,10 +197,12 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
             <div className="grid grid-cols-2 gap-2">
               {availableParticipants
                 .sort((a, b) => {
-                  // For Telegram users: prioritize linked participant
-                  if (isInTelegram && linkedParticipantId) {
-                    if (a.id === linkedParticipantId) return -1;
-                    if (b.id === linkedParticipantId) return 1;
+                  // For Telegram users: prioritize linked participants
+                  if (isInTelegram && linkedParticipantIds.length > 0) {
+                    const aLinked = linkedParticipantIds.includes(a.id);
+                    const bLinked = linkedParticipantIds.includes(b.id);
+                    if (aLinked && !bLinked) return -1;
+                    if (!aLinked && bLinked) return 1;
                   }
 
                   // Then sort by personal selection count (how many times this user selected each participant)
@@ -223,7 +215,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
                   return b.activityScore - a.activityScore;
                 })
                 .map((participant) => {
-                  const isLinkedParticipant = isInTelegram && linkedParticipantId === participant.id;
+                  const isLinkedParticipant = isInTelegram && linkedParticipantIds.includes(participant.id);
                   return (
                     <button
                       key={participant.id}

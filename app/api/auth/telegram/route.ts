@@ -5,7 +5,7 @@
 
 import { cookies } from 'next/headers';
 import { db } from '@/lib/db';
-import { telegramUsers, participants } from '@/lib/db/schema';
+import { telegramUsers, telegramUserParticipants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { validateTelegramAuth } from '@/lib/telegram/validation';
 import { ROLE_COOKIE_NAME, COOKIE_MAX_AGE, validateToken } from '@/lib/auth/constants';
@@ -32,8 +32,7 @@ export async function POST(request: Request) {
       .from(telegramUsers)
       .where(eq(telegramUsers.telegramUserId, authResult.telegramUserId));
 
-    let linkedParticipantId: number | null = null;
-    let linkedParticipantName: string | null = null;
+    let linkedParticipantIds: number[] = [];
     let finalRole: 'admin' | 'user' | null = null;
     let accessGranted = false;
 
@@ -69,16 +68,12 @@ export async function POST(request: Request) {
         })
         .where(eq(telegramUsers.id, existingTelegramUser.id));
 
-      linkedParticipantId = existingTelegramUser.participantId;
-
-      // Get linked participant name if exists
-      if (linkedParticipantId) {
-        const [participant] = await db
-          .select()
-          .from(participants)
-          .where(eq(participants.id, linkedParticipantId));
-        linkedParticipantName = participant?.name ?? null;
-      }
+      // Get linked participant IDs from junction table
+      const linkedRows = await db
+        .select({ participantId: telegramUserParticipants.participantId })
+        .from(telegramUserParticipants)
+        .where(eq(telegramUserParticipants.telegramUserId, existingTelegramUser.id));
+      linkedParticipantIds = linkedRows.map(r => r.participantId);
     } else {
       // Create new record
       const result = await db.insert(telegramUsers).values({
@@ -119,48 +114,10 @@ export async function POST(request: Request) {
       telegramUserId: authResult.telegramUserId,
       username: authResult.username,
       firstName: authResult.firstName,
-      linkedParticipantId,
-      linkedParticipantName,
+      linkedParticipantIds,
     });
   } catch (error) {
     console.error('Telegram auth error:', error);
-    return apiError('Internal server error', 500);
-  }
-}
-
-/**
- * Link or update Telegram user to participant
- */
-export async function PATCH(request: Request) {
-  try {
-    const { telegramUserId, participantId } = await request.json();
-
-    if (!telegramUserId) {
-      return apiError('Missing telegramUserId', 400);
-    }
-
-    // Find the telegram user
-    const [telegramUser] = await db
-      .select()
-      .from(telegramUsers)
-      .where(eq(telegramUsers.telegramUserId, telegramUserId));
-
-    if (!telegramUser) {
-      return apiError('Telegram user not found', 404);
-    }
-
-    // Update the participant link
-    await db
-      .update(telegramUsers)
-      .set({
-        participantId: participantId || null,
-        updatedAt: new Date(),
-      })
-      .where(eq(telegramUsers.id, telegramUser.id));
-
-    return apiSuccess({ success: true });
-  } catch (error) {
-    console.error('Telegram link error:', error);
     return apiError('Internal server error', 500);
   }
 }

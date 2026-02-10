@@ -5,7 +5,6 @@ import type { TelegramContext } from './types';
 import './types'; // Import to ensure global Window type is extended
 
 interface TelegramContextType extends TelegramContext {
-  linkParticipant: (participantId: number) => Promise<void>;
   submitManualToken: (token: string) => Promise<boolean>;
 }
 
@@ -46,21 +45,19 @@ function getStoredState(): Partial<TelegramContext> {
 
 export function TelegramProvider({ children, onAuthComplete, onAccessDenied }: TelegramProviderProps) {
   // Don't use stored state for initial auth - always re-authenticate with server
-  // Only use stored state for linkedParticipantId
+  // Only use stored state for linkedParticipantIds
   const storedState = getStoredState();
   const [state, setState] = useState<TelegramContext>(() => ({
     isInTelegram: false,
     isAuthenticated: false,
-    linkedParticipantId: storedState.linkedParticipantId,
+    linkedParticipantIds: storedState.linkedParticipantIds ?? [],
   }));
-  const [, setIsAuthenticating] = useState(false);
   const [hasTriedAuth, setHasTriedAuth] = useState(false);
 
   const authenticate = useCallback(async (manualToken?: string) => {
     if (!isTelegramMiniApp()) return false;
 
     const webApp = window.Telegram!.WebApp;
-    setIsAuthenticating(true);
 
     try {
       const response = await fetch('/api/auth/telegram', {
@@ -95,7 +92,7 @@ export function TelegramProvider({ children, onAuthComplete, onAccessDenied }: T
           telegramUserId: data.telegramUserId,
           username: data.username,
           firstName: data.firstName,
-          linkedParticipantId: data.linkedParticipantId,
+          linkedParticipantIds: data.linkedParticipantIds ?? [],
         };
         setState(newState);
         localStorage.setItem(TELEGRAM_STATE_KEY, JSON.stringify(newState));
@@ -112,7 +109,6 @@ export function TelegramProvider({ children, onAuthComplete, onAccessDenied }: T
     } catch (error) {
       console.error('Telegram auth error:', error);
     } finally {
-      setIsAuthenticating(false);
       setHasTriedAuth(true);
     }
     return false;
@@ -139,35 +135,12 @@ export function TelegramProvider({ children, onAuthComplete, onAccessDenied }: T
     authenticate();
   }, [authenticate, hasTriedAuth]);
 
-  const linkParticipant = async (participantId: number) => {
-    if (!state.telegramUserId) return;
-
-    try {
-      const response = await fetch('/api/auth/telegram', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          telegramUserId: state.telegramUserId,
-          participantId,
-        }),
-      });
-
-      if (response.ok) {
-        const newState = { ...state, linkedParticipantId: participantId };
-        setState(newState);
-        localStorage.setItem(TELEGRAM_STATE_KEY, JSON.stringify(newState));
-      }
-    } catch (error) {
-      console.error('Failed to link participant:', error);
-    }
-  };
-
   const submitManualToken = async (token: string): Promise<boolean> => {
     return authenticate(token);
   };
 
   return (
-    <TelegramCtx.Provider value={{ ...state, linkParticipant, submitManualToken }}>
+    <TelegramCtx.Provider value={{ ...state, submitManualToken }}>
       {children}
     </TelegramCtx.Provider>
   );
@@ -180,7 +153,7 @@ export function useTelegram(): TelegramContextType {
     return {
       isInTelegram: false,
       isAuthenticated: false,
-      linkParticipant: async () => {},
+      linkedParticipantIds: [],
       submitManualToken: async () => false,
     };
   }

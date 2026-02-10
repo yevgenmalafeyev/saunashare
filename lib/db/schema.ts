@@ -85,7 +85,20 @@ export type DbExpenseAssignment = typeof expenseAssignments.$inferSelect;
 export type NewExpenseAssignment = typeof expenseAssignments.$inferInsert;
 export type SessionParticipantMeta = typeof sessionParticipantMeta.$inferSelect;
 export type NewSessionParticipantMeta = typeof sessionParticipantMeta.$inferInsert;
+export const telegramUserParticipants = sqliteTable('telegram_user_participants', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  telegramUserId: integer('telegram_user_id')
+    .notNull()
+    .references(() => telegramUsers.id, { onDelete: 'cascade' }),
+  participantId: integer('participant_id')
+    .notNull()
+    .references(() => participants.id, { onDelete: 'cascade' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
+});
+
 export type AppConfig = typeof appConfig.$inferSelect;
 export type NewAppConfig = typeof appConfig.$inferInsert;
 export type TelegramUser = typeof telegramUsers.$inferSelect;
 export type NewTelegramUser = typeof telegramUsers.$inferInsert;
+export type TelegramUserParticipant = typeof telegramUserParticipants.$inferSelect;
+export type NewTelegramUserParticipant = typeof telegramUserParticipants.$inferInsert;
