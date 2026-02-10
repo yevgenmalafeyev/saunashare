@@ -11,32 +11,6 @@ function testUserAgent(pattern: RegExp): boolean {
   return pattern.test(getUserAgent());
 }
 
-export function isInAppBrowser(): boolean {
-  if (typeof window === 'undefined') return false;
-
-  const ua = getUserAgent();
-
-  // In-app browser patterns
-  const inAppPatterns = [
-    /Telegram/i,             // Telegram (iOS and Android)
-    /FBAN|FBAV|FB_IAB/i,     // Facebook Messenger
-    /Instagram/i,            // Instagram
-    /WhatsApp/i,             // WhatsApp
-  ];
-
-  if (inAppPatterns.some(pattern => pattern.test(ua))) {
-    return true;
-  }
-
-  // iOS WebView (AppleWebKit without Safari)
-  if (/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/i.test(ua)) {
-    return true;
-  }
-
-  // Android WebView
-  return /wv\)/.test(ua) && /Android/.test(ua);
-}
-
 export function isTelegramBrowser(): boolean {
   return testUserAgent(/Telegram/i);
 }

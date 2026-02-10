@@ -8,7 +8,7 @@ import { db } from '@/lib/db';
 import { telegramUsers, participants } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { validateTelegramAuth } from '@/lib/telegram/validation';
-import { ADMIN_TOKEN, USER_TOKEN, ROLE_COOKIE_NAME, COOKIE_MAX_AGE } from '@/lib/auth/constants';
+import { ROLE_COOKIE_NAME, COOKIE_MAX_AGE, validateToken } from '@/lib/auth/constants';
 import { apiSuccess, apiError } from '@/lib/utils/api';
 
 export async function POST(request: Request) {
@@ -48,12 +48,10 @@ export async function POST(request: Request) {
       finalRole = existingTelegramUser.grantedRole as 'admin' | 'user';
     } else if (manualToken) {
       // User is trying to authenticate with a manual token
-      if (manualToken === ADMIN_TOKEN) {
+      const tokenRole = validateToken(manualToken);
+      if (tokenRole) {
         accessGranted = true;
-        finalRole = 'admin';
-      } else if (manualToken === USER_TOKEN) {
-        accessGranted = true;
-        finalRole = 'user';
+        finalRole = tokenRole;
       } else {
         return apiError('Invalid token', 401);
       }

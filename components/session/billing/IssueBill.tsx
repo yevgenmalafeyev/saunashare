@@ -33,6 +33,7 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [costs, setCosts] = useState<Record<number, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [togglingPayment, setTogglingPayment] = useState<Set<number>>(new Set());
 
   const fetchStatus = useCallback(() => {
     setIsLoading(true);
@@ -87,6 +88,72 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
       }
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleTogglePaid = async (bill: ParticipantBill) => {
+    if (!status || togglingPayment.has(bill.sessionParticipantId)) return;
+
+    const newHasPaid = !bill.hasPaid;
+
+    // Optimistic update
+    setStatus((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        bills: prev.bills.map((b) =>
+          b.sessionParticipantId === bill.sessionParticipantId
+            ? { ...b, hasPaid: newHasPaid }
+            : b
+        ),
+      };
+    });
+
+    setTogglingPayment((prev) => new Set(prev).add(bill.sessionParticipantId));
+
+    try {
+      const res = await fetch(
+        `/api/sessions/${sessionId}/participants/${bill.sessionParticipantId}/payment`,
+        {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          body: JSON.stringify({ hasPaid: newHasPaid }),
+        }
+      );
+
+      if (!res.ok) {
+        // Revert on failure
+        setStatus((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            bills: prev.bills.map((b) =>
+              b.sessionParticipantId === bill.sessionParticipantId
+                ? { ...b, hasPaid: !newHasPaid }
+                : b
+            ),
+          };
+        });
+      }
+    } catch {
+      // Revert on error
+      setStatus((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          bills: prev.bills.map((b) =>
+            b.sessionParticipantId === bill.sessionParticipantId
+              ? { ...b, hasPaid: !newHasPaid }
+              : b
+          ),
+        };
+      });
+    } finally {
+      setTogglingPayment((prev) => {
+        const next = new Set(prev);
+        next.delete(bill.sessionParticipantId);
+        return next;
+      });
     }
   };
 
@@ -160,7 +227,12 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
         {status.bills.map((bill) => (
           <div
             key={bill.participantId}
-            className="bg-white border border-stone-200 rounded-xl p-4"
+            onClick={() => handleTogglePaid(bill)}
+            className={`rounded-xl p-4 cursor-pointer select-none active:scale-[0.98] transition-all border ${
+              bill.hasPaid
+                ? 'bg-green-50 border-green-300'
+                : 'bg-white border-stone-200'
+            } ${togglingPayment.has(bill.sessionParticipantId) ? 'opacity-70' : ''}`}
           >
             <div className="flex items-center justify-between mb-2">
               <div className="font-bold text-lg text-stone-800 flex items-center gap-2">

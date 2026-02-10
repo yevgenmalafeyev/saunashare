@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { ADMIN_TOKEN, USER_TOKEN, ROLE_COOKIE_NAME, COOKIE_MAX_AGE } from '@/lib/auth/constants';
+import { ROLE_COOKIE_NAME, COOKIE_MAX_AGE, validateToken, shouldUpgradeRole } from '@/lib/auth/constants';
 
 /**
  * Detect if request is from an in-app browser (Telegram, etc.)
@@ -45,16 +45,6 @@ function shouldSkipMiddleware(pathname: string): boolean {
     skipExtensions.some(ext => pathname.endsWith(ext)) ||
     pathname === '/forbidden'
   );
-}
-
-function validateToken(token: string): 'admin' | 'user' | null {
-  if (token === ADMIN_TOKEN) return 'admin';
-  if (token === USER_TOKEN) return 'user';
-  return null;
-}
-
-function shouldUpgradeRole(currentRole: string | undefined, newRole: 'admin' | 'user'): boolean {
-  return !currentRole || currentRole === 'none' || (currentRole === 'user' && newRole === 'admin');
 }
 
 function createCookieOptions(isHttps: boolean) {

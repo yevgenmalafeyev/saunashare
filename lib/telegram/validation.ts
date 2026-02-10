@@ -78,11 +78,3 @@ export async function validateTelegramAuth(initData: string): Promise<TelegramAu
     };
   }
 }
-
-/**
- * Check if a username is in the admin list
- */
-export function isAdminUsername(username: string | undefined): boolean {
-  if (!username) return false;
-  return ADMIN_USERNAMES.includes(username.toLowerCase());
-}
