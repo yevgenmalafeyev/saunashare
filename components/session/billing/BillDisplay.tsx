@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeftIcon, CheckCircleIcon } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
+import { JSON_HEADERS } from '@/lib/constants';
 import type { ParticipantBill } from '@/lib/types';
 
 interface BillDisplayProps {
@@ -20,6 +21,7 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
   const [isLandscape, setIsLandscape] = useState<boolean | null>(null);
   const [scale, setScale] = useState(1);
   const [bills, setBills] = useState<ParticipantBill[]>(initialBills);
+  const [togglingPayment, setTogglingPayment] = useState<Set<number>>(new Set());
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -44,6 +46,56 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
     const interval = setInterval(fetchPaymentStatus, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [fetchPaymentStatus]);
+
+  const handleTogglePaid = async (bill: ParticipantBill) => {
+    if (togglingPayment.has(bill.sessionParticipantId)) return;
+
+    const newHasPaid = !bill.hasPaid;
+
+    const revertPayment = () => {
+      setBills((prev) =>
+        prev.map((b) =>
+          b.sessionParticipantId === bill.sessionParticipantId
+            ? { ...b, hasPaid: !newHasPaid }
+            : b
+        )
+      );
+    };
+
+    // Optimistic update
+    setBills((prev) =>
+      prev.map((b) =>
+        b.sessionParticipantId === bill.sessionParticipantId
+          ? { ...b, hasPaid: newHasPaid }
+          : b
+      )
+    );
+
+    setTogglingPayment((prev) => new Set(prev).add(bill.sessionParticipantId));
+
+    try {
+      const res = await fetch(
+        `/api/sessions/${sessionId}/participants/${bill.sessionParticipantId}/payment`,
+        {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          body: JSON.stringify({ hasPaid: newHasPaid }),
+        }
+      );
+
+      if (!res.ok) {
+        revertPayment();
+      }
+    } catch {
+      revertPayment();
+    } finally {
+      setTogglingPayment((prev) => {
+        const next = new Set(prev);
+        next.delete(bill.sessionParticipantId);
+        return next;
+      });
+    }
+  };
 
   // Hide body background/overflow for this fullscreen display
   useEffect(() => {
@@ -197,11 +249,12 @@ export function BillDisplay({ bills: initialBills, sessionName, sessionId, balan
         {sortedBills.map((bill) => (
           <div
             key={bill.participantId}
-            className={`backdrop-blur-sm rounded-xl p-2 border transition-colors duration-500 ${
+            onClick={() => handleTogglePaid(bill)}
+            className={`backdrop-blur-sm rounded-xl p-2 border transition-colors duration-500 cursor-pointer select-none active:scale-[0.98] ${
               bill.hasPaid
                 ? 'bg-green-500/30 border-green-400/50'
                 : 'bg-white/10 border-white/20'
-            }`}
+            } ${togglingPayment.has(bill.sessionParticipantId) ? 'opacity-70' : ''}`}
           >
             <div className="text-center mb-1">
               <div className={`font-bold leading-tight flex items-center justify-center gap-1 ${
