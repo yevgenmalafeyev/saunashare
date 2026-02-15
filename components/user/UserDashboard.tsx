@@ -141,13 +141,17 @@ export function UserDashboard() {
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        // For Telegram users, fetch server-linked sessions and merge into local state
+        // Build a local merged map BEFORE filtering — avoids stale closure from async setState
+        let allCheckedIn: Record<number, { participantId: number; sessionParticipantId: number }> = { ...checkedInSessions };
+
+        // For Telegram users, fetch server-linked sessions and merge into local variable
         if (isInTelegram && linkedParticipantIds.length > 0) {
           try {
             const tgRes = await fetch(`/api/auth/telegram/sessions?participantIds=${linkedParticipantIds.join(',')}`);
             if (tgRes.ok) {
               const serverData = await tgRes.json();
-              mergeServerSessions(serverData);
+              allCheckedIn = { ...serverData, ...allCheckedIn };
+              mergeServerSessions(serverData); // persist for future renders
             }
           } catch {
             // Non-critical — continue with local data
@@ -160,8 +164,8 @@ export function UserDashboard() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        // Filter sessions: today's (not hidden) OR past sessions where user is checked in (not hidden)
-        const checkedInSessionIds = new Set(Object.keys(checkedInSessions).map(Number));
+        // Use allCheckedIn for filtering — no stale closure issue
+        const checkedInSessionIds = new Set(Object.keys(allCheckedIn).map(Number));
 
         const relevantSessions = data.sessions.filter((session: Session & { isToday?: boolean }) => {
           if (session.hidden) return false;
@@ -177,8 +181,8 @@ export function UserDashboard() {
         // Mark sessions with check-in info and billing status
         for (const session of relevantSessions) {
 
-          // Check if user is checked in from our local map
-          const checkInRecord = checkedInSessions[session.id];
+          // Check if user is checked in from our local merged map
+          const checkInRecord = allCheckedIn[session.id];
           if (checkInRecord) {
             session.userSessionParticipantId = checkInRecord.sessionParticipantId;
           }
@@ -205,7 +209,8 @@ export function UserDashboard() {
     };
 
     fetchSessions();
-  }, [checkedInSessions, isInTelegram, linkedParticipantIds, mergeServerSessions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInTelegram, linkedParticipantIds, mergeServerSessions]);
 
   const handleSessionClick = (session: SessionWithCheckedIn) => {
     if (session.userSessionParticipantId) {

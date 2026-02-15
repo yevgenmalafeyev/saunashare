@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 import type { UserRole } from '@/lib/auth/constants';
 
 export type { UserRole };
@@ -138,14 +138,14 @@ export function AuthProvider({ children, initialRole }: AuthProviderProps) {
     });
   };
 
-  const mergeServerSessions = (serverSessions: Record<number, { participantId: number; sessionParticipantId: number }>) => {
+  const mergeServerSessions = useCallback((serverSessions: Record<number, { participantId: number; sessionParticipantId: number }>) => {
     setCheckedInSessionsState((prev) => {
       // Server data as base, localStorage (prev) overwrites — local check-ins take precedence
       const merged = { ...serverSessions, ...prev };
       LocalStorageHelper.setJson(CHECKED_IN_SESSIONS_KEY, merged);
       return merged;
     });
-  };
+  }, []);
 
   const getCheckedInSession = (sessionId: number): CheckInRecord | undefined => {
     return checkedInSessions[sessionId];
