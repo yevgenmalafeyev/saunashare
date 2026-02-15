@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
-import { telegramUserParticipants } from '@/lib/db/schema';
+import { telegramUsers, telegramUserParticipants } from '@/lib/db/schema';
+import { eq } from 'drizzle-orm';
 import { getApiRole } from '@/lib/auth/api-auth';
 import { apiSuccess, apiError, parseRouteParams } from '@/lib/utils/api';
 
@@ -11,10 +12,42 @@ export async function POST(
   if (role !== 'admin') return apiError('Forbidden', 403);
 
   const { id: participantId } = await parseRouteParams(params);
-  const { telegramUserId } = await request.json();
+  const body = await request.json();
 
-  if (!telegramUserId || typeof telegramUserId !== 'number') {
-    return apiError('telegramUserId is required and must be a number');
+  let telegramUserId: number;
+
+  if (body.telegramUserId && typeof body.telegramUserId === 'number') {
+    // Link to existing telegram user by ID
+    telegramUserId = body.telegramUserId;
+  } else if (body.telegramUsername && typeof body.telegramUsername === 'string') {
+    // Pre-seed a new telegram user by username, or find existing
+    const username = body.telegramUsername.replace(/^@/, '').trim();
+    if (!username) return apiError('Invalid telegram username');
+
+    const [existing] = await db
+      .select({ id: telegramUsers.id })
+      .from(telegramUsers)
+      .where(eq(telegramUsers.telegramUsername, username));
+
+    if (existing) {
+      telegramUserId = existing.id;
+    } else {
+      const firstName = typeof body.firstName === 'string' ? body.firstName.trim() || null : null;
+      const [created] = await db
+        .insert(telegramUsers)
+        .values({
+          telegramUserId: `placeholder_${username}`,
+          telegramUsername: username,
+          telegramFirstName: firstName,
+          grantedRole: 'user',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+      telegramUserId = created.id;
+    }
+  } else {
+    return apiError('telegramUserId (number) or telegramUsername (string) is required');
   }
 
   try {

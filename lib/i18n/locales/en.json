@@ -201,6 +201,11 @@
     "unlinkConfirmMessage": "This user will no longer be associated with this participant.",
     "selectTelegramUser": "Select Telegram User",
     "noTelegramUsers": "No Telegram users available",
+    "createNewTelegramUser": "Add New Telegram User",
+    "telegramUsername": "Telegram Username",
+    "telegramUsernamePlaceholder": "username (without @)",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "e.g., Anna",
     "viewMembers": "Members"
   },
   "telegram": {

@@ -201,6 +201,11 @@
     "unlinkConfirmMessage": "Цей користувач більше не буде пов'язаний з цим учасником.",
     "selectTelegramUser": "Оберіть користувача Telegram",
     "noTelegramUsers": "Немає доступних користувачів Telegram",
+    "createNewTelegramUser": "Додати нового користувача Telegram",
+    "telegramUsername": "Ім'я користувача Telegram",
+    "telegramUsernamePlaceholder": "ім'я користувача (без @)",
+    "firstName": "Ім'я",
+    "firstNamePlaceholder": "напр., Анна",
     "viewMembers": "Учасники"
   },
   "telegram": {
