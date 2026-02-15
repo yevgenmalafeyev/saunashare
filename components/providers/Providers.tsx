@@ -66,10 +66,17 @@ export function Providers({ children }: ProvidersProps) {
     setIsLoading(false);
   }, []);
 
-  // Push content below Telegram's built-in controls
+  // Push content below Telegram's built-in controls using actual safe area insets
   useEffect(() => {
-    if (isTelegram) {
-      document.documentElement.style.setProperty('--tg-top-inset', '2.5rem');
+    if (isTelegram && window.Telegram?.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      const safeArea = webApp.safeAreaInset?.top ?? 0;
+      const contentSafe = webApp.contentSafeAreaInset?.top ?? 0;
+      const total = safeArea + contentSafe;
+      document.documentElement.style.setProperty(
+        '--tg-top-inset',
+        total > 0 ? `${total}px` : '5rem',
+      );
     }
   }, [isTelegram]);
 
