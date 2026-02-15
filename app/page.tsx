@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen pb-24">
-      <header className="sticky top-0 z-10 bg-stone-50/80 backdrop-blur-lg border-b border-stone-200">
+      <header className="sticky z-10 bg-stone-50/80 backdrop-blur-lg border-b border-stone-200" style={{ top: 'var(--tg-top-inset)' }}>
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div>

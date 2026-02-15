@@ -66,6 +66,13 @@ export function Providers({ children }: ProvidersProps) {
     setIsLoading(false);
   }, []);
 
+  // Push content below Telegram's built-in controls
+  useEffect(() => {
+    if (isTelegram) {
+      document.documentElement.style.setProperty('--tg-top-inset', '2.5rem');
+    }
+  }, [isTelegram]);
+
   useEffect(() => {
     // Skip if in Telegram - auth is handled by TelegramProvider
     if (isTelegram) {
