@@ -139,6 +139,8 @@ export function UserDashboard() {
   const [showBillIssuedError, setShowBillIssuedError] = useState(false);
 
   useEffect(() => {
+    let stale = false;
+
     const fetchSessions = async () => {
       try {
         // Build a local merged map BEFORE filtering — avoids stale closure from async setState
@@ -148,7 +150,7 @@ export function UserDashboard() {
         if (isInTelegram && linkedParticipantIds.length > 0) {
           try {
             const tgRes = await fetch(`/api/auth/telegram/sessions?participantIds=${linkedParticipantIds.join(',')}`);
-            if (tgRes.ok) {
+            if (!stale && tgRes.ok) {
               const serverData = await tgRes.json();
               allCheckedIn = { ...serverData, ...allCheckedIn };
               mergeServerSessions(serverData); // persist for future renders
@@ -158,8 +160,12 @@ export function UserDashboard() {
           }
         }
 
+        if (stale) return;
+
         const res = await fetch('/api/sessions');
         const data = await res.json();
+
+        if (stale) return;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -190,6 +196,7 @@ export function UserDashboard() {
           // Only fetch billing status for today's sessions (for check-in blocking)
           if (session.isToday && !session.userSessionParticipantId) {
             const billingRes = await fetch(`/api/sessions/${session.id}/billing?type=calculate`);
+            if (stale) return;
             const billingData = await billingRes.json();
             session.billingReady = billingData.ready;
           }
@@ -202,13 +209,18 @@ export function UserDashboard() {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
 
-        setSessions(relevantSessions);
+        if (!stale) {
+          setSessions(relevantSessions);
+        }
       } finally {
-        setIsLoading(false);
+        if (!stale) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchSessions();
+    return () => { stale = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInTelegram, linkedParticipantIds, mergeServerSessions]);
 

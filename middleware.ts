@@ -47,6 +47,13 @@ function shouldSkipMiddleware(pathname: string): boolean {
   );
 }
 
+/** Prevent Telegram WebView from caching HTML pages with stale JS bundles */
+function noCachePage() {
+  const response = NextResponse.next();
+  response.headers.set('Cache-Control', 'no-store');
+  return response;
+}
+
 function createCookieOptions(isHttps: boolean) {
   return {
     maxAge: COOKIE_MAX_AGE,
@@ -70,7 +77,7 @@ function handleTokenWithRole(
   if (shouldSet) {
     // For in-app browsers: set cookie but keep token in URL for shareability
     if (inAppBrowser) {
-      const response = NextResponse.next();
+      const response = noCachePage();
       response.cookies.set(ROLE_COOKIE_NAME, newRole, cookieOptions);
       return response;
     }
@@ -85,7 +92,7 @@ function handleTokenWithRole(
 
   // Role doesn't need upgrade
   if (inAppBrowser) {
-    return NextResponse.next();
+    return noCachePage();
   }
 
   // Normal browser: remove token from URL
@@ -129,18 +136,18 @@ export function middleware(request: NextRequest) {
   if (!currentRole || currentRole === 'none') {
     // Allow Telegram Mini App requests through for client-side authentication
     if (isTelegramRequest(request)) {
-      return NextResponse.next();
+      return noCachePage();
     }
 
     // Allow root path through for Telegram Mini App detection
     if (pathname === '/') {
-      return NextResponse.next();
+      return noCachePage();
     }
 
     return NextResponse.redirect(new URL('/forbidden', request.url));
   }
 
-  return NextResponse.next();
+  return noCachePage();
 }
 
 export const config = {
