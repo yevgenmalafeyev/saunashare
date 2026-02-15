@@ -1,6 +1,5 @@
 import { db } from '@/lib/db';
 import { telegramUsers, telegramUserParticipants } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
 import { getApiRole } from '@/lib/auth/api-auth';
 import { apiSuccess, apiError } from '@/lib/utils/api';
 import type { TelegramUserOption } from '@/lib/types';
