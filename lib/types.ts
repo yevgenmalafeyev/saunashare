@@ -88,3 +88,28 @@ export interface UserExpenseAssignment {
   share: number;
   totalCost: number | null;
 }
+
+/** A participant with their telegram links (used in members admin page) */
+export interface Member {
+  id: number;
+  name: string;
+  activityScore: number;
+  telegramLinks: TelegramLink[];
+}
+
+/** A telegram user linked to a participant */
+export interface TelegramLink {
+  linkId: number;
+  telegramUserId: number;
+  telegramUsername: string | null;
+  telegramFirstName: string | null;
+}
+
+/** A telegram user option for linking (used in the link picker modal) */
+export interface TelegramUserOption {
+  id: number;
+  telegramUsername: string | null;
+  telegramFirstName: string | null;
+  grantedRole: string | null;
+  linkedParticipantIds: number[];
+}

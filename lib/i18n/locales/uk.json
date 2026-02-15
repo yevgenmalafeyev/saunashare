@@ -190,6 +190,19 @@
   "tv": {
     "rotateLandscape": "Поверніть пристрій горизонтально"
   },
+  "members": {
+    "title": "Учасники",
+    "subtitle": "Учасники та зв'язки Telegram",
+    "noMembers": "Ще немає учасників",
+    "telegramLinks": "Зв'язки Telegram",
+    "noTelegramLinks": "Немає пов'язаних акаунтів Telegram",
+    "addTelegramLink": "Пов'язати користувача Telegram",
+    "unlinkConfirmTitle": "Відв'язати користувача Telegram?",
+    "unlinkConfirmMessage": "Цей користувач більше не буде пов'язаний з цим учасником.",
+    "selectTelegramUser": "Оберіть користувача Telegram",
+    "noTelegramUsers": "Немає доступних користувачів Telegram",
+    "viewMembers": "Учасники"
+  },
   "telegram": {
     "title": "Відкрийте в браузері",
     "description": "Для кращого досвіду та збереження авторизації, відкрийте цю сторінку в браузері.",

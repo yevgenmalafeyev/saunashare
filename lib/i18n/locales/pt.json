@@ -190,6 +190,19 @@
   "tv": {
     "rotateLandscape": "Rode para paisagem"
   },
+  "members": {
+    "title": "Membros",
+    "subtitle": "Participantes e ligações Telegram",
+    "noMembers": "Ainda não há membros",
+    "telegramLinks": "Ligações Telegram",
+    "noTelegramLinks": "Nenhuma conta Telegram ligada",
+    "addTelegramLink": "Ligar Utilizador Telegram",
+    "unlinkConfirmTitle": "Desligar utilizador Telegram?",
+    "unlinkConfirmMessage": "Este utilizador deixará de estar associado a este participante.",
+    "selectTelegramUser": "Selecionar Utilizador Telegram",
+    "noTelegramUsers": "Nenhum utilizador Telegram disponível",
+    "viewMembers": "Membros"
+  },
   "telegram": {
     "title": "Abrir no Navegador",
     "description": "Para a melhor experiência e manter a sessão iniciada, abra esta página no seu navegador.",

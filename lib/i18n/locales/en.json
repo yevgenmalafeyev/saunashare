@@ -190,6 +190,19 @@
   "tv": {
     "rotateLandscape": "Rotate to landscape"
   },
+  "members": {
+    "title": "Members",
+    "subtitle": "Participants & Telegram links",
+    "noMembers": "No members yet",
+    "telegramLinks": "Telegram Links",
+    "noTelegramLinks": "No Telegram accounts linked",
+    "addTelegramLink": "Link Telegram User",
+    "unlinkConfirmTitle": "Unlink Telegram user?",
+    "unlinkConfirmMessage": "This user will no longer be associated with this participant.",
+    "selectTelegramUser": "Select Telegram User",
+    "noTelegramUsers": "No Telegram users available",
+    "viewMembers": "Members"
+  },
   "telegram": {
     "title": "Open in Browser",
     "description": "For the best experience and to stay logged in, please open this page in your browser.",
