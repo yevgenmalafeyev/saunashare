@@ -72,10 +72,10 @@ export function Providers({ children }: ProvidersProps) {
       const webApp = window.Telegram.WebApp;
       const safeArea = webApp.safeAreaInset?.top ?? 0;
       const contentSafe = webApp.contentSafeAreaInset?.top ?? 0;
-      const total = safeArea + contentSafe;
+      const total = Math.max(0, safeArea + contentSafe - 11);
       document.documentElement.style.setProperty(
         '--tg-top-inset',
-        total > 0 ? `${total}px` : '5rem',
+        total > 0 ? `${total}px` : '4.3rem',
       );
     }
   }, [isTelegram]);
