@@ -1,76 +1,51 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient, type Config } from '@libsql/client';
 import * as schema from './schema';
+import { seedDatabase } from './seed';
 import path from 'path';
 import fs from 'fs';
-import { ADMIN_TOKEN, USER_TOKEN } from '@/lib/auth/constants';
 
-const dataDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+/**
+ * Resolve the libSQL connection config.
+ *
+ * - Production (Vercel): a remote Turso database via TURSO_DATABASE_URL +
+ *   TURSO_AUTH_TOKEN.
+ * - Local / self-hosted: a file-backed libSQL database under ./data, which is
+ *   wire-compatible with the SQLite file the app used previously.
+ */
+function resolveConfig(): Config {
+  const url = process.env.TURSO_DATABASE_URL;
+  if (url) {
+    return { url, authToken: process.env.TURSO_AUTH_TOKEN };
+  }
+
+  const dataDir = path.join(process.cwd(), 'data');
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+  return { url: `file:${path.join(dataDir, 'banha.db')}` };
 }
 
-const dbPath = path.join(dataDir, 'banha.db');
+export const client = createClient(resolveConfig());
 
-let sqlite: Database.Database;
-
-try {
-  sqlite = new Database(dbPath, { timeout: 5000 });
-  sqlite.pragma('journal_mode = WAL');
-  sqlite.pragma('foreign_keys = ON');
-  sqlite.pragma('busy_timeout = 5000');
-} catch {
-  // During build, connection may fail - create a dummy connection
-  sqlite = new Database(':memory:');
-}
-
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(client, { schema });
 
 export * from './queries';
 
-// Initialize database using Drizzle migrations
-// Note: Schema is defined in schema.ts using Drizzle ORM
-// Use `npx drizzle-kit push` to sync schema changes to the database
-function initializeDatabase() {
-  try {
-    // Seed system expense template if it doesn't exist
-    const existing = sqlite.prepare('SELECT id FROM expense_templates WHERE name = ?').get('Время, чай, вода');
-    if (!existing) {
-      sqlite.prepare('INSERT INTO expense_templates (name, usage_count, is_system) VALUES (?, 0, 1)').run('Время, чай, вода');
-    }
-
-    // Seed app config tokens and phone numbers if they don't exist
-    const seedConfig = (key: string, value: string) => {
-      const exists = sqlite.prepare('SELECT key FROM app_config WHERE key = ?').get(key);
-      if (!exists) {
-        sqlite.prepare('INSERT INTO app_config (key, value) VALUES (?, ?)').run(key, value);
-      }
-    };
-
-    seedConfig('admin-token', ADMIN_TOKEN);
-    seedConfig('user-token', USER_TOKEN);
-    seedConfig('artur-phone', '+351924689616');
-    seedConfig('andrey-phone', '+351963383623');
-
-    // Create junction table if it doesn't exist (for production migration)
-    sqlite.exec(`
-      CREATE TABLE IF NOT EXISTS telegram_user_participants (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        telegram_user_id INTEGER NOT NULL REFERENCES telegram_users(id) ON DELETE CASCADE,
-        participant_id INTEGER NOT NULL REFERENCES participants(id) ON DELETE CASCADE,
-        created_at INTEGER NOT NULL DEFAULT (unixepoch())
-      )
-    `);
-    sqlite.exec('CREATE UNIQUE INDEX IF NOT EXISTS tup_unique ON telegram_user_participants(telegram_user_id, participant_id)');
-
-    // Migrate existing telegram_users.participant_id into junction table (idempotent)
-    sqlite.prepare(`
-      INSERT OR IGNORE INTO telegram_user_participants (telegram_user_id, participant_id, created_at)
-      SELECT id, participant_id, updated_at FROM telegram_users WHERE participant_id IS NOT NULL
-    `).run();
-  } catch {
-    // Ignore initialization errors during build (tables may not exist yet)
-  }
-}
-
-initializeDatabase();
+/**
+ * In development the local database may be empty on first run, so we seed it
+ * idempotently. Production is provisioned from the imported SQL dump (or via
+ * `npm run db:push` + the dump), so per-cold-start seeding is skipped to keep
+ * serverless cold starts fast and avoid redundant writes to Turso.
+ *
+ * Cascading deletes are handled explicitly in the route handlers (see the
+ * delete handlers under app/api/...), so the app does not depend on the
+ * `foreign_keys` PRAGMA being enabled — important because it is off by default
+ * on Turso and does not stick across Turso's stateless HTTP connections.
+ */
+export const dbReady: Promise<void> =
+  process.env.NODE_ENV === 'production'
+    ? Promise.resolve()
+    : seedDatabase(db).catch((err) => {
+        console.error('[db] seeding failed:', err);
+      });

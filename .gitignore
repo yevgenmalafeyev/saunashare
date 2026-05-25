@@ -3,6 +3,9 @@
 # Database (contains user data)
 /data/
 
+# DB dumps / exports (contain personal data)
+/dumps/
+
 # Claude credentials and settings (contains auth tokens)
 .claude-docker/
 .claude/settings.local.json
@@ -46,6 +49,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

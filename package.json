@@ -7,11 +7,15 @@
     "build": "next build",
     "start": "next start --port 3030",
     "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:import": "node scripts/import-to-turso.mjs",
     "prepare": "husky"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.3",
     "@tma.js/init-data-node": "^2.0.6",
-    "better-sqlite3": "^12.6.2",
+    "openai": "^6.39.0",
     "drizzle-orm": "^0.45.1",
     "next": "16.1.6",
     "react": "19.2.3",
@@ -19,7 +23,6 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

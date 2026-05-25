@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessions, expenses } from '@/lib/db/schema';
-import { eq, and, ne } from 'drizzle-orm';
+import { sessions, expenses, expenseAssignments, sessionParticipants, sessionParticipantMeta } from '@/lib/db/schema';
+import { eq, and, ne, inArray } from 'drizzle-orm';
 import { parseRouteParams, apiError, apiSuccess } from '@/lib/utils/api';
 import { validateUpdateSession, validatePatchSession, validateAndRespond } from '@/lib/validation/schemas';
 import { DEFAULT_EXPENSE_NAME } from '@/lib/constants';
@@ -90,7 +90,26 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     return apiError('Cannot delete session with additional expenses', 400);
   }
 
-  await db.delete(sessions).where(eq(sessions.id, sessionId));
+  // Atomically remove the session and every row that used to be cleaned up by
+  // ON DELETE CASCADE. Cascades are not reliably enforced on Turso's remote
+  // connection, so we delete the dependent rows explicitly (child rows first).
+  const sessionParticipantIds = db
+    .select({ id: sessionParticipants.id })
+    .from(sessionParticipants)
+    .where(eq(sessionParticipants.sessionId, sessionId));
+  const sessionExpenseIds = db
+    .select({ id: expenses.id })
+    .from(expenses)
+    .where(eq(expenses.sessionId, sessionId));
+
+  await db.batch([
+    db.delete(expenseAssignments).where(inArray(expenseAssignments.expenseId, sessionExpenseIds)),
+    db.delete(expenseAssignments).where(inArray(expenseAssignments.sessionParticipantId, sessionParticipantIds)),
+    db.delete(sessionParticipantMeta).where(inArray(sessionParticipantMeta.sessionParticipantId, sessionParticipantIds)),
+    db.delete(sessionParticipants).where(eq(sessionParticipants.sessionId, sessionId)),
+    db.delete(expenses).where(eq(expenses.sessionId, sessionId)),
+    db.delete(sessions).where(eq(sessions.id, sessionId)),
+  ]);
 
   return apiSuccess({ success: true });
 }

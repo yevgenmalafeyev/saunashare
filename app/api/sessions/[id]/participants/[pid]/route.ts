@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessionParticipants, participants, expenseAssignments } from '@/lib/db/schema';
+import { sessionParticipants, participants, expenseAssignments, sessionParticipantMeta, telegramUsers, telegramUserParticipants } from '@/lib/db/schema';
 import { getDefaultExpense } from '@/lib/db/queries';
 import { eq, and } from 'drizzle-orm';
 import { parseRouteParams, apiSuccess, apiError } from '@/lib/utils/api';
@@ -55,9 +55,13 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     return apiError('Not found', 404);
   }
 
-  await db
-    .delete(sessionParticipants)
-    .where(eq(sessionParticipants.id, sessionParticipantId));
+  // Remove the session participant and the rows that used to cascade off it
+  // (its payment meta and expense assignments) atomically.
+  await db.batch([
+    db.delete(expenseAssignments).where(eq(expenseAssignments.sessionParticipantId, sessionParticipantId)),
+    db.delete(sessionParticipantMeta).where(eq(sessionParticipantMeta.sessionParticipantId, sessionParticipantId)),
+    db.delete(sessionParticipants).where(eq(sessionParticipants.id, sessionParticipantId)),
+  ]);
 
   // Check if participant is used in other sessions
   const otherSessions = await db
@@ -65,11 +69,14 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams) {
     .from(sessionParticipants)
     .where(eq(sessionParticipants.participantId, sp.participantId));
 
-  // If participant has no other sessions, delete globally
+  // If participant has no other sessions, delete globally along with the rows
+  // that previously cascaded/SET NULL off it (telegram links + user backref).
   if (otherSessions.length === 0) {
-    await db
-      .delete(participants)
-      .where(eq(participants.id, sp.participantId));
+    await db.batch([
+      db.delete(telegramUserParticipants).where(eq(telegramUserParticipants.participantId, sp.participantId)),
+      db.update(telegramUsers).set({ participantId: null }).where(eq(telegramUsers.participantId, sp.participantId)),
+      db.delete(participants).where(eq(participants.id, sp.participantId)),
+    ]);
   }
 
   return apiSuccess({ success: true });

@@ -270,15 +270,19 @@ async function handleFullDeletion(sessionId: number, expenseId: number) {
     return apiSuccess({ success: true });
   }
 
-  // Delete the expense
-  await db
-    .delete(expenses)
-    .where(
-      and(
-        eq(expenses.id, expenseId),
-        eq(expenses.sessionId, sessionId)
-      )
-    );
+  // Delete the expense and its assignments atomically (the assignment rows
+  // used to be removed via ON DELETE CASCADE, which isn't enforced on Turso).
+  await db.batch([
+    db.delete(expenseAssignments).where(eq(expenseAssignments.expenseId, expenseId)),
+    db
+      .delete(expenses)
+      .where(
+        and(
+          eq(expenses.id, expenseId),
+          eq(expenses.sessionId, sessionId)
+        )
+      ),
+  ]);
 
   // Check if any other expenses use this name
   const remainingExpenses = await db
