@@ -125,7 +125,7 @@
     "total": "Total",
     "viewTotalInvoice": "View total invoice",
     "extractCosts": "Extract Costs",
-    "processingWithClaude": "Processing with Claude...",
+    "processingWithAI": "Processing with AI...",
     "extractedCosts": "Extracted Costs",
     "applyCostsToExpenses": "Apply Costs to Expenses",
     "costsApplied": "Costs applied to expenses!",

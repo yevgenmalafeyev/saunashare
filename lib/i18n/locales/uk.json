@@ -125,7 +125,7 @@
     "total": "Всього",
     "viewTotalInvoice": "Переглянути загальний рахунок",
     "extractCosts": "Витягнути ціни",
-    "processingWithClaude": "Обробка з Claude...",
+    "processingWithAI": "Обробка за допомогою ШІ...",
     "extractedCosts": "Витягнуті ціни",
     "applyCostsToExpenses": "Застосувати ціни до витрат",
     "costsApplied": "Ціни застосовано до витрат!",

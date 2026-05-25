@@ -108,7 +108,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
               {isProcessing ? (
                 <>
                   <LoadingSpinnerIcon className="w-5 h-5 mr-2 inline-block" />
-                  {t('billing.processingWithClaude')}
+                  {t('billing.processingWithAI')}
                 </>
               ) : (
                 t('billing.extractCosts')
