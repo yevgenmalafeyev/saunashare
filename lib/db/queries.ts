@@ -39,6 +39,19 @@ export async function getDefaultExpense(sessionId: number) {
 }
 
 /**
+ * Get the (sessionParticipantId, share) pairs assigned to an expense.
+ */
+export async function getAssignmentsForExpense(expenseId: number) {
+  return db
+    .select({
+      sessionParticipantId: expenseAssignments.sessionParticipantId,
+      share: expenseAssignments.share,
+    })
+    .from(expenseAssignments)
+    .where(eq(expenseAssignments.expenseId, expenseId));
+}
+
+/**
  * Get all participants for a session with their names
  */
 export async function getSessionParticipants(sessionId: number) {

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@/lib/db';
+import { db, getAssignmentsForExpense } from '@/lib/db';
 import { expenses, expenseAssignments, expenseTemplates } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { parseRouteParams, apiSuccess, apiError } from '@/lib/utils/api';
@@ -112,15 +112,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   // Get other assignments (excluding current user)
-  const otherAssignments = await db
-    .select({ sessionParticipantId: expenseAssignments.sessionParticipantId, share: expenseAssignments.share })
-    .from(expenseAssignments)
-    .where(
-      and(
-        eq(expenseAssignments.expenseId, expenseId),
-        // Note: We'll filter in JS since Drizzle doesn't have neq for this pattern easily
-      )
-    );
+  const otherAssignments = await getAssignmentsForExpense(expenseId);
 
   const filteredOtherAssignments = otherAssignments.filter(
     (a) => a.sessionParticipantId !== sessionParticipantId
@@ -152,10 +144,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     );
 
   // Return updated expense with assignments
-  const assignments = await db
-    .select({ sessionParticipantId: expenseAssignments.sessionParticipantId, share: expenseAssignments.share })
-    .from(expenseAssignments)
-    .where(eq(expenseAssignments.expenseId, expenseId));
+  const assignments = await getAssignmentsForExpense(expenseId);
 
   return apiSuccess({ ...expense, itemCount: newItemCount, assignments });
 }
@@ -215,10 +204,7 @@ async function handleUserDeletion(
   }
 
   // Get other assignments
-  const otherAssignments = await db
-    .select({ sessionParticipantId: expenseAssignments.sessionParticipantId, share: expenseAssignments.share })
-    .from(expenseAssignments)
-    .where(eq(expenseAssignments.expenseId, expenseId));
+  const otherAssignments = await getAssignmentsForExpense(expenseId);
 
   const filteredOtherAssignments = otherAssignments.filter(
     (a) => a.sessionParticipantId !== sessionParticipantId
