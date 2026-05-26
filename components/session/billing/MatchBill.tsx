@@ -24,11 +24,13 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
     error?: string;
   } | null>(null);
   const [applied, setApplied] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
 
   const handleImageSelect = (base64: string) => {
     setImageData(base64);
     setResult(null);
     setApplied(false);
+    setApplyError(null);
   };
 
   const handleProcess = async () => {
@@ -54,6 +56,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
   const handleApply = async () => {
     if (!result?.expenses) return;
 
+    setApplyError(null);
     try {
       const res = await fetch(`/api/sessions/${sessionId}/billing?action=apply`, {
         method: 'POST',
@@ -61,13 +64,20 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
         body: JSON.stringify({ expenses: result.expenses }),
       });
 
-      if (res.ok) {
+      const data = await res.json();
+
+      // Only treat it as applied if the server actually updated expense rows.
+      // A 200 with updated:0 means nothing matched — don't show success.
+      if (res.ok && data?.success && data?.updated > 0) {
         setApplied(true);
         onUpdate();
         onApplied?.();
+      } else {
+        setApplyError(t('billing.noCostsMatched'));
       }
     } catch (err) {
       console.error('Failed to apply:', err);
+      setApplyError(t('billing.failedToProcess'));
     }
   };
 
@@ -75,6 +85,7 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
     setImageData(null);
     setResult(null);
     setApplied(false);
+    setApplyError(null);
   };
 
   return (
@@ -142,9 +153,14 @@ export function MatchBill({ sessionId, onUpdate, onApplied }: MatchBillProps) {
                       {t('billing.costsApplied')}
                     </div>
                   ) : (
-                    <Button className="w-full" size="lg" onClick={handleApply}>
-                      {t('billing.applyCostsToExpenses')}
-                    </Button>
+                    <>
+                      <Button className="w-full" size="lg" onClick={handleApply}>
+                        {t('billing.applyCostsToExpenses')}
+                      </Button>
+                      {applyError && (
+                        <p className="text-sm text-red-700 text-center">{applyError}</p>
+                      )}
+                    </>
                   )}
                 </>
               ) : (

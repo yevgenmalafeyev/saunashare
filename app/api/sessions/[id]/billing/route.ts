@@ -131,7 +131,11 @@ async function handleApply(sessionId: number, request: NextRequest) {
     .from(expenses)
     .where(eq(expenses.sessionId, sessionId));
 
-  // Match and update costs
+  // Match and update costs, tracking what actually got written vs. what
+  // couldn't be matched to a session expense by name.
+  let updated = 0;
+  const unmatched: string[] = [];
+
   for (const extracted of extractedExpenses) {
     const matchingExpense = sessionExpenses.find(
       (e) => e.name.toLowerCase() === extracted.name.toLowerCase()
@@ -142,8 +146,17 @@ async function handleApply(sessionId: number, request: NextRequest) {
         .update(expenses)
         .set({ totalCost: extracted.cost })
         .where(eq(expenses.id, matchingExpense.id));
+      updated++;
+    } else {
+      unmatched.push(extracted.name);
     }
   }
 
-  return apiSuccess({ success: true });
+  if (updated > 0 && unmatched.length > 0) {
+    console.warn('[bill-apply] some extracted items did not match any expense:', unmatched);
+  }
+
+  // Report what actually happened. Zero matches means nothing was written even
+  // though extraction "succeeded" — the client must not show a success message.
+  return apiSuccess({ success: updated > 0, updated, unmatched });
 }

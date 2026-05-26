@@ -129,6 +129,7 @@
     "extractedCosts": "Extracted Costs",
     "applyCostsToExpenses": "Apply Costs to Expenses",
     "costsApplied": "Costs applied to expenses!",
+    "noCostsMatched": "None of the extracted items matched this session's expenses, so nothing was applied.",
     "failedToProcess": "Failed to process image",
     "failedToLoad": "Failed to load billing information.",
     "showBillText": "Show this text to the sauna staff to get your bill"

@@ -129,6 +129,7 @@
     "extractedCosts": "Custos Extraídos",
     "applyCostsToExpenses": "Aplicar Custos às Despesas",
     "costsApplied": "Custos aplicados às despesas!",
+    "noCostsMatched": "Nenhum dos itens extraídos corresponde às despesas desta sessão, por isso nada foi aplicado.",
     "failedToProcess": "Falha ao processar imagem",
     "failedToLoad": "Falha ao carregar informação de faturação.",
     "showBillText": "Mostre este texto ao pessoal da sauna para obter a sua fatura"
