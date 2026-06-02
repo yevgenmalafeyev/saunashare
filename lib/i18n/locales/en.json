@@ -132,7 +132,11 @@
     "noCostsMatched": "None of the extracted items matched this session's expenses, so nothing was applied.",
     "failedToProcess": "Failed to process image",
     "failedToLoad": "Failed to load billing information.",
-    "showBillText": "Show this text to the sauna staff to get your bill"
+    "showBillText": "Show this text to the sauna staff to get your bill",
+    "undoIssuance": "Cancel / Undo issuance",
+    "undoIssuanceTitle": "Undo issuance?",
+    "undoIssuanceConfirm": "This clears all applied costs and payment statuses for this session. You can then send a new photo to AI or enter the costs manually. This can't be undone.",
+    "undoing": "Undoing..."
   },
   "user": {
     "welcome": "Welcome to Yoga-Banya",

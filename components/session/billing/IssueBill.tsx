@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Spinner, Button, CheckCircleIcon } from '@/components/ui';
+import { Spinner, Button, Modal, CheckCircleIcon } from '@/components/ui';
 import { useTranslation } from '@/lib/context/I18nContext';
 import { JSON_HEADERS } from '@/lib/constants';
 import type { ParticipantBill } from '@/lib/types';
@@ -34,6 +34,8 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
   const [costs, setCosts] = useState<Record<number, string>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [togglingPayment, setTogglingPayment] = useState<Set<number>>(new Set());
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const fetchStatus = useCallback(() => {
     setIsLoading(true);
@@ -149,9 +151,70 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
     }
   };
 
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/billing?action=reset`, {
+        method: 'POST',
+        headers: JSON_HEADERS,
+      });
+
+      if (res.ok) {
+        setIsResetModalOpen(false);
+        fetchStatus();
+        onUpdate?.();
+      }
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const hasValidCosts = status?.missingCostExpenses.some(
     (e) => costs[e.id] && costs[e.id].trim() !== '' && !isNaN(parseFloat(costs[e.id])) && parseFloat(costs[e.id]) > 0
   );
+
+  // Show the undo control once anything has been issued — costs applied or
+  // someone marked paid. Wiping it returns the session to a clean state.
+  const hasSomethingToReset =
+    !!status && ((status.expenseTotal ?? 0) > 0 || status.bills.some((b) => b.hasPaid));
+
+  const resetSection = hasSomethingToReset ? (
+    <>
+      <Button
+        variant="ghost"
+        onClick={() => setIsResetModalOpen(true)}
+        className="w-full text-red-600 hover:bg-red-50"
+      >
+        {t('billing.undoIssuance')}
+      </Button>
+      <Modal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        title={t('billing.undoIssuanceTitle')}
+      >
+        <div className="space-y-4">
+          <p className="text-stone-600">{t('billing.undoIssuanceConfirm')}</p>
+          <div className="flex gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => setIsResetModalOpen(false)}
+              className="flex-1"
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleReset}
+              disabled={isResetting}
+              className="flex-1"
+            >
+              {isResetting ? t('billing.undoing') : t('common.confirm')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  ) : null;
 
   if (isLoading) {
     return <Spinner />;
@@ -209,6 +272,8 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
             </Button>
           </div>
         )}
+
+        {resetSection}
       </div>
     );
   }
@@ -288,6 +353,8 @@ export function IssueBill({ sessionId, onUpdate }: IssueBillProps) {
           </>
         )}
       </div>
+
+      {resetSection}
     </div>
   );
 }

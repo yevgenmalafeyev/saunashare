@@ -132,7 +132,11 @@
     "noCostsMatched": "Nenhum dos itens extraídos corresponde às despesas desta sessão, por isso nada foi aplicado.",
     "failedToProcess": "Falha ao processar imagem",
     "failedToLoad": "Falha ao carregar informação de faturação.",
-    "showBillText": "Mostre este texto ao pessoal da sauna para obter a sua fatura"
+    "showBillText": "Mostre este texto ao pessoal da sauna para obter a sua fatura",
+    "undoIssuance": "Cancelar / Desfazer emissão",
+    "undoIssuanceTitle": "Desfazer emissão?",
+    "undoIssuanceConfirm": "Isto limpa todos os custos aplicados e estados de pagamento desta sessão. Depois pode enviar uma nova foto para a IA ou introduzir os custos manualmente. Esta ação não pode ser desfeita.",
+    "undoing": "A desfazer..."
   },
   "user": {
     "welcome": "Bem-vindo à Banha de Ioga",

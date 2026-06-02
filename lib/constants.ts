@@ -23,4 +23,5 @@ export const BILLING_TYPE = {
 export const BILLING_ACTION = {
   MATCH: 'match',
   APPLY: 'apply',
+  RESET: 'reset',
 } as const;

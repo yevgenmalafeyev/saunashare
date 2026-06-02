@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessionParticipants, expenses } from '@/lib/db/schema';
+import { sessionParticipants, sessionParticipantMeta, expenses } from '@/lib/db/schema';
 import { getSessionParticipantsWithPayment, getExpensesWithAssignments } from '@/lib/db/queries';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { generateBillRequestText, calculateBills } from '@/lib/utils/billing';
 import { extractExpensesFromImage } from '@/lib/openai/image-processor';
 import { parseRouteParams, apiError, apiSuccess } from '@/lib/utils/api';
@@ -35,6 +35,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return handleMatch(sessionId, request);
     case BILLING_ACTION.APPLY:
       return handleApply(sessionId, request);
+    case BILLING_ACTION.RESET:
+      return handleReset(sessionId);
     default:
       return apiError('Invalid action', 400);
   }
@@ -159,4 +161,31 @@ async function handleApply(sessionId: number, request: NextRequest) {
   // Report what actually happened. Zero matches means nothing was written even
   // though extraction "succeeded" — the client must not show a success message.
   return apiSuccess({ success: updated > 0, updated, unmatched });
+}
+
+// Undo issuance: wipe applied costs and payment statuses so the session goes
+// back to a clean "not ready" state — the user can re-photo or enter costs by hand.
+async function handleReset(sessionId: number) {
+  // Clear every expense's cost back to null.
+  await db
+    .update(expenses)
+    .set({ totalCost: null })
+    .where(eq(expenses.sessionId, sessionId));
+
+  // Clear payment status for all participants in this session.
+  const sessionParticipantIds = (
+    await db
+      .select({ id: sessionParticipants.id })
+      .from(sessionParticipants)
+      .where(eq(sessionParticipants.sessionId, sessionId))
+  ).map((p) => p.id);
+
+  if (sessionParticipantIds.length > 0) {
+    await db
+      .update(sessionParticipantMeta)
+      .set({ hasPaid: false })
+      .where(inArray(sessionParticipantMeta.sessionParticipantId, sessionParticipantIds));
+  }
+
+  return apiSuccess({ success: true });
 }
