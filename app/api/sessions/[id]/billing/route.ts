@@ -4,7 +4,7 @@ import { sessionParticipants, sessionParticipantMeta, expenses } from '@/lib/db/
 import { getSessionParticipantsWithPayment, getExpensesWithAssignments } from '@/lib/db/queries';
 import { eq, inArray } from 'drizzle-orm';
 import { generateBillRequestText, calculateBills } from '@/lib/utils/billing';
-import { extractExpensesFromImage } from '@/lib/openai/image-processor';
+import { extractExpensesFromImage } from '@/lib/cmap/image-processor';
 import { parseRouteParams, apiError, apiSuccess } from '@/lib/utils/api';
 import { BILLING_TYPE, BILLING_ACTION } from '@/lib/constants';
 

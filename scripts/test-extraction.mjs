@@ -1,5 +1,7 @@
-import OpenAI from 'openai';
 import { readFileSync } from 'node:fs';
+
+// A/B a bill image against the live cmap model.
+// Usage: CMAP_KEY=... node scripts/test-extraction.mjs [image-path]
 
 // Real prod data for session 33 (pulled from Turso), in route insertion order.
 const expectedExpenses = [
@@ -9,43 +11,22 @@ const expectedExpenses = [
   { name: 'Массаж', itemCount: 3 },
 ];
 
-const IMAGE_PATH = '/Users/yevgenmalafeyev/Downloads/IMG_9673.jpg';
-const MODEL = process.env.OPENAI_MODEL || 'gpt-5';
-const REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT || 'medium';
-const isReasoningModel = /^(gpt-5|o\d)/.test(MODEL);
+const IMAGE_PATH = process.argv[2] || '/Users/yevgenmalafeyev/Downloads/IMG_9673.jpg';
+const CMAP_BASE_URL = process.env.CMAP_BASE_URL || 'https://cmap.blaster.ai';
+const CMAP_MODEL = process.env.CMAP_MODEL; // optional override of the key default
+const apiKey = process.env.CMAP_KEY;
 
-const BILL_SCHEMA = {
-  name: 'bill_extraction',
-  strict: true,
-  schema: {
-    type: 'object',
-    additionalProperties: false,
-    properties: {
-      expenses: {
-        type: 'array',
-        items: {
-          type: 'object',
-          additionalProperties: false,
-          properties: {
-            name: { type: 'string' },
-            count: { type: 'number' },
-            cost: { type: 'number' },
-          },
-          required: ['name', 'count', 'cost'],
-        },
-      },
-      total: { type: 'number' },
-    },
-    required: ['expenses', 'total'],
-  },
-};
+if (!apiKey) {
+  console.error('CMAP_KEY is not set');
+  process.exit(1);
+}
 
 const expenseList = expectedExpenses
   .map((e) => `- "${e.name}" (expected count: ${e.itemCount})`)
   .join('\n');
 
-// EXACT prompt from lib/openai/image-processor.ts (current hardened version).
-const prompt = `Analyze this image. It may be a photo of a bill or a screenshot of a chat conversation containing bill details from a sauna. The text is usually in Russian.
+// EXACT prompt from lib/cmap/image-processor.ts (current hardened version).
+const prompt = `Analyze the attached image. It may be a photo of a bill or a screenshot of a chat conversation containing bill details from a sauna. The text is usually in Russian.
 Extract the cost of each expense item.
 
 Expected items (use these exact names in your output when an item corresponds to one of them):
@@ -60,52 +41,51 @@ READING THE LAYOUT — read carefully, lines can be formatted either way:
 RULES:
 1. Combine the time/tea/water group — separate lines such as "Время" (time), "Чай" (tea), "Вода" (water), "Облепиха" (sea buckthorn), "Питьевая" — into a SINGLE item named exactly "Время, чай, вода", with its cost being the SUM of those lines' prices.
 2. Return EVERY other line that has a price as its own item — never drop a priced line. If a line corresponds to one of the expected items above, use that expected name exactly; otherwise use the item's name exactly as written in the image (do not force it onto an expected name).
-3. "total" must equal the sum of the costs of ALL items you listed. Do not invent items or prices that are not in the image. If the image is genuinely unreadable, return an empty list.`;
+3. "total" must equal the sum of the costs of ALL items you listed. Do not invent items or prices that are not in the image. If the image is genuinely unreadable, return an empty list.
 
-const imageBase64 = readFileSync(IMAGE_PATH).toString('base64');
-const dataUrl = `data:image/jpeg;base64,${imageBase64}`;
+OUTPUT FORMAT — respond with ONLY a single JSON object, no prose, no markdown fences:
+{"expenses":[{"name":string,"count":number,"cost":number}],"total":number}`;
 
-const client = new OpenAI({ timeout: 120_000, maxRetries: 1 });
+const bytes = readFileSync(IMAGE_PATH);
+const form = new FormData();
+form.set('prompt', prompt);
+if (CMAP_MODEL) form.set('model', CMAP_MODEL);
+form.set('images', new Blob([new Uint8Array(bytes)], { type: 'image/jpeg' }), 'bill.jpg');
 
-console.log(`\n=== Calling model: ${MODEL} (reasoning_effort=${REASONING_EFFORT}) ===\n`);
+console.log(`\n=== Calling cmap (${CMAP_BASE_URL}, model=${CMAP_MODEL || 'opus(default)'}) ===\n`);
 const t0 = Date.now();
 
 try {
-  const completion = await client.chat.completions.create({
-    model: MODEL,
-    ...(isReasoningModel ? { reasoning_effort: REASONING_EFFORT } : {}),
-    max_completion_tokens: 8000,
-    response_format: { type: 'json_schema', json_schema: BILL_SCHEMA },
-    messages: [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: dataUrl } },
-        ],
-      },
-    ],
+  const res = await fetch(`${CMAP_BASE_URL}/v1/run`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${apiKey}` },
+    body: form,
   });
 
   const ms = Date.now() - t0;
-  const choice = completion.choices[0];
-  console.log('finish_reason:', choice?.finish_reason);
-  console.log('usage:', JSON.stringify(completion.usage));
-  console.log('refusal:', choice?.message?.refusal ?? null);
+  const body = await res.json();
+  console.log('status:', res.status);
   console.log(`latency: ${ms} ms\n`);
-  console.log('--- raw content ---');
-  console.log(choice?.message?.content);
 
-  const parsed = JSON.parse(choice.message.content);
+  if (!res.ok) {
+    console.error('!!! API ERROR !!!', JSON.stringify(body));
+    process.exit(1);
+  }
+
+  console.log('--- raw response ---');
+  console.log(body.response);
+
+  const text = body.response;
+  const fenced = /```(?:json)?\s*([\s\S]*?)```/i.exec(text);
+  const candidate = fenced ? fenced[1] : text;
+  const json = candidate.slice(candidate.indexOf('{'), candidate.lastIndexOf('}') + 1);
+  const parsed = JSON.parse(json);
   const sum = parsed.expenses.reduce((s, e) => s + e.cost, 0);
   console.log('\n--- parsed summary ---');
   for (const e of parsed.expenses) console.log(`  ${e.name}  ×${e.count}  = ${e.cost} €`);
   console.log(`  sum of items = ${sum} €   |   stated total = ${parsed.total} €`);
 } catch (err) {
-  console.error('\n!!! API ERROR !!!');
-  console.error('status:', err?.status);
-  console.error('code:', err?.code);
+  console.error('\n!!! ERROR !!!');
   console.error('message:', err?.message);
-  if (err?.error) console.error('error body:', JSON.stringify(err.error));
   process.exit(1);
 }
