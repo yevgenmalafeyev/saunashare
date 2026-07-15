@@ -89,7 +89,10 @@
     "assignToAll": "Atribuir a todos",
     "selectFromTemplates": "Selecionar de modelos:",
     "systemTemplate": "Modelo do sistema",
-    "createNewExpense": "Criar Nova Despesa"
+    "createNewExpense": "Criar Nova Despesa",
+    "billIssuedCannotAdd": "A fatura já foi emitida — não é possível adicionar novos participantes. Anule primeiro a emissão no separador «Fatura».",
+    "billIssuedCannotRemove": "A fatura já foi emitida — não é possível remover participantes. Anule primeiro a emissão no separador «Fatura».",
+    "actionBlocked": "Ação não é possível"
   },
   "billing": {
     "title": "Fatura",

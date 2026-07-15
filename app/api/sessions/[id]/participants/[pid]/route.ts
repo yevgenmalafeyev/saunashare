@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessionParticipants, participants, expenseAssignments, sessionParticipantMeta, telegramUsers, telegramUserParticipants } from '@/lib/db/schema';
+import { sessions, sessionParticipants, participants, expenseAssignments, sessionParticipantMeta, telegramUsers, telegramUserParticipants } from '@/lib/db/schema';
 import { getDefaultExpense } from '@/lib/db/queries';
 import { eq, and } from 'drizzle-orm';
 import { parseRouteParams, apiSuccess, apiError } from '@/lib/utils/api';
@@ -44,7 +44,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
-  const { pid: sessionParticipantId } = await parseRouteParams(params);
+  const { id: sessionId, pid: sessionParticipantId } = await parseRouteParams(params);
+
+  // Once the bill has been issued, participants are part of the issued bill —
+  // removing one would silently invalidate it. Undo the issuance first.
+  const [session] = await db.select().from(sessions).where(eq(sessions.id, sessionId));
+  if (session?.billIssued) {
+    return apiError('Cannot remove a participant after bill has been issued', 403);
+  }
 
   const [sp] = await db
     .select()

@@ -89,7 +89,10 @@
     "assignToAll": "Assign to all",
     "selectFromTemplates": "Select from templates:",
     "systemTemplate": "System template",
-    "createNewExpense": "Create New Expense"
+    "createNewExpense": "Create New Expense",
+    "billIssuedCannotAdd": "The bill has already been issued — new participants can't be added. Undo the issuance in the Billing tab first.",
+    "billIssuedCannotRemove": "The bill has already been issued — participants can't be removed. Undo the issuance in the Billing tab first.",
+    "actionBlocked": "Action not possible"
   },
   "billing": {
     "title": "Billing",

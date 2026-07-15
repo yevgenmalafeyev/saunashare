@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
       id: sessions.id,
       name: sessions.name,
       hidden: sessions.hidden,
+      billIssued: sessions.billIssued,
       createdAt: sessions.createdAt,
       participantCount: sql<number>`(
         SELECT COALESCE(SUM(person_count), 0)

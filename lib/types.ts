@@ -51,6 +51,7 @@ export interface Session {
   id: number;
   name: string;
   hidden: boolean;
+  billIssued?: boolean;
   createdAt: string;
   participantCount: number;
   dutyPerson?: DutyPerson | null;

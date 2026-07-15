@@ -12,6 +12,11 @@ export const sessions = sqliteTable('sessions', {
   name: text('name').notNull(),
   hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
   dutyPerson: text('duty_person'), // 'artur' | 'andrey' | null
+  // Explicit "bill has been issued" marker. Set when applied costs cover every
+  // expense, cleared by undo-issuance. Participant add/remove is locked while
+  // it's set — do NOT infer issuance from expense state (a fully-costed
+  // expense list can occur mid-session and must not lock the session).
+  billIssued: integer('bill_issued', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull().$defaultFn(() => new Date()),
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Spinner, CountSelector, SwipeableRow, FloatingButton, CheckCircleIcon } from '@/components/ui';
+import { Spinner, CountSelector, SwipeableRow, FloatingButton, CheckCircleIcon, Modal, Button } from '@/components/ui';
 import { AddParticipantModal } from './AddParticipantModal';
 import { DutyPersonSwitch } from './DutyPersonSwitch';
 import { useTranslation } from '@/lib/context/I18nContext';
@@ -19,6 +19,7 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
   const [participants, setParticipants] = useState<SessionParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const fetchParticipants = useCallback(async () => {
     try {
@@ -58,6 +59,11 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
       fetchParticipants();
       onUpdate();
       window.dispatchEvent(new CustomEvent('participantChange'));
+    } else if (res.status === 403) {
+      setActionError(t('session.billIssuedCannotRemove'));
+    } else {
+      const body = await res.json().catch(() => null);
+      setActionError(body?.error || t('common.error'));
     }
   };
 
@@ -141,6 +147,19 @@ export function ParticipantList({ sessionId, onUpdate, billingReady = false }: P
       />
 
       <DutyPersonSwitch sessionId={sessionId} onUpdate={onUpdate} />
+
+      <Modal
+        isOpen={actionError !== null}
+        onClose={() => setActionError(null)}
+        title={t('session.actionBlocked')}
+      >
+        <div className="space-y-4">
+          <p className="text-stone-600">{actionError}</p>
+          <Button className="w-full" onClick={() => setActionError(null)}>
+            {t('common.close')}
+          </Button>
+        </div>
+      </Modal>
 
       <FloatingButton onClick={() => setIsAddModalOpen(true)} storageKey="fab-participants" />
     </div>

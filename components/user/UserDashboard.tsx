@@ -123,7 +123,6 @@ function NavigationLinks() {
 
 interface SessionWithCheckedIn extends Session {
   userSessionParticipantId?: number;
-  billingReady?: boolean;
   isToday?: boolean;
 }
 
@@ -184,21 +183,12 @@ export function UserDashboard() {
           return session.isToday || isCheckedIn;
         });
 
-        // Mark sessions with check-in info and billing status
+        // Mark sessions with check-in info. Check-in blocking uses the
+        // explicit billIssued flag returned by the sessions API.
         for (const session of relevantSessions) {
-
-          // Check if user is checked in from our local merged map
           const checkInRecord = allCheckedIn[session.id];
           if (checkInRecord) {
             session.userSessionParticipantId = checkInRecord.sessionParticipantId;
-          }
-
-          // Only fetch billing status for today's sessions (for check-in blocking)
-          if (session.isToday && !session.userSessionParticipantId) {
-            const billingRes = await fetch(`/api/sessions/${session.id}/billing?type=calculate`);
-            if (stale) return;
-            const billingData = await billingRes.json();
-            session.billingReady = billingData.ready;
           }
         }
 
@@ -229,7 +219,7 @@ export function UserDashboard() {
       // Already checked in — set correct currentUserId before navigating
       setCurrentUserId(session.userSessionParticipantId);
       router.push(`/session/${session.id}`);
-    } else if (session.billingReady) {
+    } else if (session.billIssued) {
       // Bill already issued, cannot check in
       setShowBillIssuedError(true);
     } else {

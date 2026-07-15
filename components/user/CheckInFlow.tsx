@@ -23,6 +23,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
   const [sessionParticipants, setSessionParticipants] = useState<SessionParticipant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // New participant form state
   const [showNewForm, setShowNewForm] = useState(false);
@@ -57,10 +58,17 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
     setPersonCount(participant.recentPersonCount);
   };
 
+  const checkInError = async (res: Response) => {
+    if (res.status === 403) return t('user.billAlreadyIssued');
+    const body = await res.json().catch(() => null);
+    return body?.error || t('common.error');
+  };
+
   const handleConfirmExisting = async () => {
     if (!selectedParticipant) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
       const res = await fetch(`/api/sessions/${sessionId}/participants`, {
         method: 'POST',
@@ -78,6 +86,8 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
 
         onCheckIn(sessionParticipant.id, sessionParticipant.participantId, selectedParticipant.name, personCount);
         onClose();
+      } else {
+        setError(await checkInError(res));
       }
     } finally {
       setIsSubmitting(false);
@@ -88,6 +98,7 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
     if (!newName.trim()) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
       const res = await fetch(`/api/sessions/${sessionId}/participants`, {
         method: 'POST',
@@ -105,6 +116,8 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
 
         onCheckIn(sessionParticipant.id, sessionParticipant.participantId, newName.trim(), personCount);
         onClose();
+      } else {
+        setError(await checkInError(res));
       }
     } finally {
       setIsSubmitting(false);
@@ -116,11 +129,17 @@ export function CheckInFlow({ sessionId, isOpen, onClose, onCheckIn }: CheckInFl
     setSelectedParticipant(null);
     setNewName('');
     setPersonCount(1);
+    setError(null);
     onClose();
   };
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('user.checkingIn')}>
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700">
+          {error}
+        </div>
+      )}
       {isLoading ? (
         <Spinner />
       ) : selectedParticipant ? (

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { db } from '@/lib/db';
-import { sessionParticipants, sessionParticipantMeta, expenses } from '@/lib/db/schema';
+import { sessions, sessionParticipants, sessionParticipantMeta, expenses } from '@/lib/db/schema';
 import { getSessionParticipantsWithPayment, getExpensesWithAssignments } from '@/lib/db/queries';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, isNull, and } from 'drizzle-orm';
 import { generateBillRequestText, calculateBills } from '@/lib/utils/billing';
 import { extractExpensesFromImage } from '@/lib/cmap/image-processor';
 import { parseRouteParams, apiError, apiSuccess } from '@/lib/utils/api';
@@ -140,7 +140,7 @@ async function handleApply(sessionId: number, request: NextRequest) {
 
   for (const extracted of extractedExpenses) {
     const matchingExpense = sessionExpenses.find(
-      (e) => e.name.toLowerCase() === extracted.name.toLowerCase()
+      (e) => e.name.trim().toLowerCase() === extracted.name.trim().toLowerCase()
     );
 
     if (matchingExpense) {
@@ -158,6 +158,23 @@ async function handleApply(sessionId: number, request: NextRequest) {
     console.warn('[bill-apply] some extracted items did not match any expense:', unmatched);
   }
 
+  // Once every expense in the session is costed, the bill is issued: lock
+  // participant changes until undo-issuance clears the flag.
+  if (updated > 0) {
+    const [uncosted] = await db
+      .select({ id: expenses.id })
+      .from(expenses)
+      .where(and(eq(expenses.sessionId, sessionId), isNull(expenses.totalCost)))
+      .limit(1);
+
+    if (!uncosted) {
+      await db
+        .update(sessions)
+        .set({ billIssued: true, updatedAt: new Date() })
+        .where(eq(sessions.id, sessionId));
+    }
+  }
+
   // Report what actually happened. Zero matches means nothing was written even
   // though extraction "succeeded" — the client must not show a success message.
   return apiSuccess({ success: updated > 0, updated, unmatched });
@@ -166,6 +183,12 @@ async function handleApply(sessionId: number, request: NextRequest) {
 // Undo issuance: wipe applied costs and payment statuses so the session goes
 // back to a clean "not ready" state — the user can re-photo or enter costs by hand.
 async function handleReset(sessionId: number) {
+  // Un-issue the bill so participants can be added/removed again.
+  await db
+    .update(sessions)
+    .set({ billIssued: false, updatedAt: new Date() })
+    .where(eq(sessions.id, sessionId));
+
   // Clear every expense's cost back to null.
   await db
     .update(expenses)

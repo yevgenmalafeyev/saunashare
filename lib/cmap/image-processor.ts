@@ -69,19 +69,28 @@ export async function extractExpensesFromImage(
   const prompt = `Analyze the attached image. It may be a photo of a bill or a screenshot of a chat conversation containing bill details from a sauna. The text is usually in Russian.
 Extract the cost of each expense item.
 
-Expected items (use these exact names in your output when an item corresponds to one of them):
+Expected items — this is what the group actually ordered (use these exact names in your output when a bill line corresponds to one of them):
 ${expenseList}
 
 READING THE LAYOUT — read carefully, lines can be formatted either way:
 - The amount (price, in euros) may appear BEFORE or AFTER the item name. Lines like "195 - время" or "время - 195" both mean: время costs 195.
-- A number in parentheses right after an item name is almost always a QUANTITY/COUNT, NOT a price. e.g. "пельмени (3)" = 3 portions of pelmeni, "кресло (3)" = 3 chairs — the price is the OTHER number on that line, not the one in parentheses.
+- A number in parentheses right after an item name is almost always a QUANTITY/COUNT, NOT a price. e.g. "пельмени (3)" = 3 portions of pelmeni, "кресло (3)" = 3 chairs — the price is the OTHER number on that line, not the one in parentheses. The price on such a line is the line TOTAL for all its units.
 - Descriptive words in parentheses (e.g. "(9 человек, 3 часа)") are just context, not prices.
 - The price is the standalone monetary amount on the line, typically the larger number that isn't a quantity.
 
+CHAT CORRECTIONS — when the image is a chat conversation, read the WHOLE thread in order:
+- Later messages may amend the bill: a surcharge after a headcount correction (e.g. a total "377", then "54 ещё." after two more people joined, then a new total "431."), a corrected price, or a replacement total.
+- Apply every correction: add a surcharge to the cost of the item it amends (a headcount/extra-time surcharge amends the time line), and use the FINAL stated total. Ignore intermediate totals that were later superseded.
+
+MATCHING BILL LINES TO EXPECTED ITEMS:
+- The sauna's wording rarely matches the expected names exactly — it adds descriptors ("борщ со сметаной" is the expected "Борщ"), drops brand names ("пиво, б/а" is the expected "Пиво Heineken б/а 0.25"), or uses a different word for the same thing (a massage chair line "кресло" corresponds to an expected "Массаж" item).
+- Match SEMANTICALLY, and use the counts as a strong hint: a line whose quantity equals an expected item's expected count very likely IS that item.
+- Prefer assigning every priced line to an expected item when a plausible correspondence exists. Use the literal name from the image ONLY when the line truly corresponds to no expected item.
+
 RULES:
-1. Combine the time/tea/water group — separate lines such as "Время" (time), "Чай" (tea), "Вода" (water), "Облепиха" (sea buckthorn), "Питьевая" — into a SINGLE item named exactly "Время, чай, вода", with its cost being the SUM of those lines' prices.
-2. Return EVERY other line that has a price as its own item — never drop a priced line. If a line corresponds to one of the expected items above, use that expected name exactly; otherwise use the item's name exactly as written in the image (do not force it onto an expected name).
-3. "total" must equal the sum of the costs of ALL items you listed. Do not invent items or prices that are not in the image. If the image is genuinely unreadable, return an empty list.
+1. Combine the time/tea/water group — separate lines such as "Время" (time), "Чай" (tea), "Вода" (water), "Облепиха" (sea buckthorn), "Питьевая", plus any time surcharge from a chat correction — into a SINGLE item named exactly "Время, чай, вода", with its cost being the SUM of those lines' prices.
+2. Return EVERY other line that has a price as its own item — never drop a priced line.
+3. "total" must equal the sum of the costs of ALL items you listed (after applying any chat corrections). Do not invent items or prices that are not in the image. If the image is genuinely unreadable, return an empty list.
 
 OUTPUT FORMAT — respond with ONLY a single JSON object, no prose, no markdown fences:
 {"expenses":[{"name":string,"count":number,"cost":number}],"total":number}`;

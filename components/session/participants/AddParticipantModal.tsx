@@ -27,6 +27,7 @@ export function AddParticipantModal({
   const [personCount, setPersonCount] = useState(1);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -38,7 +39,14 @@ export function AddParticipantModal({
     setNewName('');
     setPersonCount(1);
     setIsCreatingNew(false);
+    setError(null);
   }, [isOpen]);
+
+  const errorFromResponse = async (res: Response) => {
+    if (res.status === 403) return t('session.billIssuedCannotAdd');
+    const body = await res.json().catch(() => null);
+    return body?.error || t('common.error');
+  };
 
   // Filter suggestions to exclude already-added participants
   const availableSuggestions = suggestions.filter(
@@ -47,6 +55,7 @@ export function AddParticipantModal({
 
   const handleSelectExisting = async (participant: ParticipantSuggestion) => {
     setIsLoading(true);
+    setError(null);
     try {
       const res = await fetch(`/api/sessions/${sessionId}/participants`, {
         method: 'POST',
@@ -58,6 +67,8 @@ export function AddParticipantModal({
         // Remove from suggestions list but keep modal open
         setSuggestions((prev) => prev.filter((p) => p.id !== participant.id));
         onAdd();
+      } else {
+        setError(await errorFromResponse(res));
       }
     } finally {
       setIsLoading(false);
@@ -78,6 +89,8 @@ export function AddParticipantModal({
       if (res.ok) {
         onAdd();
         onClose();
+      } else {
+        setError(await errorFromResponse(res));
       }
     } finally {
       setIsLoading(false);
@@ -86,6 +99,11 @@ export function AddParticipantModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('session.addParticipant')}>
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 text-red-700">
+          {error}
+        </div>
+      )}
       {!isCreatingNew ? (
         <div className="space-y-4">
           {availableSuggestions.length > 0 && (
